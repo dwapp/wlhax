@@ -8,6 +8,7 @@ require (
 	github.com/gdamore/tcell v1.1.5-0.20190724020331-84b54971b46c
 	github.com/google/shlex v0.0.0-20181106134648-c34317bd91bf
 	github.com/kyoh86/xdg v1.0.0
+	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a
 )
 
 replace github.com/gdamore/tcell => git.sr.ht/~sircmpwn/tcell v0.0.0-20190807054800-3fdb6bc01a50
