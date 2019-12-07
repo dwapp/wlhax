@@ -1,16 +1,14 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
-	"errors"
 	"net"
 	"os"
 	"path"
 	"time"
 
-	"golang.org/x/sys/unix"
 	"github.com/kyoh86/xdg"
+	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
 )
 
 // TODO: Support synthetic servers without forwarding events, so users can
@@ -40,24 +38,6 @@ type Client struct {
 	ObjectMap map[uint32]*WaylandObject
 	Globals   []*WaylandGlobal
 	GlobalMap map[uint32]*WaylandGlobal
-}
-
-type WaylandPacket struct {
-	ObjectId  uint32
-	Length    uint16
-	Opcode    uint16
-	Arguments []byte
-	Fds       []uintptr
-}
-
-type WaylandGlobal struct {
-	Interface string
-	GlobalId  uint32
-}
-
-type WaylandObject struct {
-	ObjectId uint32
-	// TODO: Add interface, if we know it
 }
 
 func NewProxy() (*Proxy, error) {
@@ -119,87 +99,11 @@ func (proxy *Proxy) OnUpdate(onUpdate func()) {
 	proxy.onUpdate = onUpdate
 }
 
-func ReadPacket(conn *net.UnixConn) (*WaylandPacket, error) {
-	var fds []uintptr
-	var buf [8]byte
-	control := make([]byte, 24)
-
-	n, oobn, _, _, err := conn.ReadMsgUnix(buf[:], control)
-	if err != nil {
-		return nil, err
-	}
-	if n != 8 {
-		return nil, errors.New("Unable to read message header")
-	}
-	if oobn > 0 {
-		if oobn > len(control) {
-			return nil, errors.New("Control message buffer undersized")
-		}
-
-		ctrl, err := unix.ParseSocketControlMessage(control)
-		if err != nil {
-			return nil, err
-		}
-		for _, msg := range ctrl {
-			_fds, err := unix.ParseUnixRights(&msg)
-			if err != nil {
-				return nil, errors.New("Unable to parse unix rights")
-			}
-			if len(_fds) != 1 {
-				return nil, errors.New("Unexpectedly got >1 file descriptor")
-			}
-			fds = append(fds, uintptr(_fds[0]))
-		}
-	}
-
-	packet := &WaylandPacket{
-		ObjectId: binary.LittleEndian.Uint32(buf[0:4]),
-		Opcode:   binary.LittleEndian.Uint16(buf[4:6]),
-		Length:   binary.LittleEndian.Uint16(buf[6:8]),
-		Fds:      fds,
-	}
-
-	packet.Arguments = make([]byte, packet.Length - 8)
-
-	n, err = conn.Read(packet.Arguments)
-	if err != nil {
-		return nil, err
-	}
-	if int(packet.Length - 8) != len(packet.Arguments) {
-		return nil, errors.New("Buffer is shorter than expected length")
-	}
-
-	return packet, nil
-}
-
-func (packet WaylandPacket) WritePacket(conn *net.UnixConn) error {
-	var header bytes.Buffer
-	size := uint32(len(packet.Arguments) + 8)
-
-	binary.Write(&header, binary.LittleEndian, uint32(packet.ObjectId))
-	binary.Write(&header, binary.LittleEndian,
-		uint32(size<<16|uint32(packet.Opcode)&0x0000ffff))
-
-	var oob []byte
-	for _, fd := range packet.Fds {
-		rights := unix.UnixRights(int(fd))
-		oob = append(oob, rights...)
-	}
-
-	body := append(header.Bytes(), packet.Arguments...)
-	d, c, err := conn.WriteMsgUnix(body, oob, nil)
-	if err != nil {
-		return err
-	}
-	if c != len(oob) || d != len(body) {
-		return errors.New("WriteMsgUnix failed")
-	}
-
-	return nil
-}
-
 func (proxy *Proxy) handleClient(conn net.Conn) {
-	wl_display := &WaylandObject{ObjectId: 1}
+	wl_display := &WaylandObject{
+		Interface: "wl_display",
+		ObjectId: 1,
+	}
 
 	client := &Client{
 		conn: conn.(*net.UnixConn),
@@ -258,20 +162,29 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 				client.Close(err)
 				return
 			}
+			for _, fd := range packet.Fds {
+				// TODO: We don't necessarily want to close these always
+				unix.Close(int(fd))
+			}
 		}
 	}()
 }
 
 func (client *Client) Close(err error) {
+	if client.Err == nil {
+		client.Err = err
+	}
 	client.conn.Close()
 	client.remote.Close()
 	client.Timestamp = time.Now()
-	client.Err = err
 	client.proxy.onUpdate()
 }
 
-func (client *Client) NewObject(objectId uint32) *WaylandObject {
-	object := &WaylandObject{ObjectId: objectId}
+func (client *Client) NewObject(objectId uint32, iface string) *WaylandObject {
+	object := &WaylandObject{
+		Interface: iface,
+		ObjectId:  objectId,
+	}
 	client.ObjectMap[objectId] = object
 	client.Objects = append(client.Objects, object)
 	return object
@@ -281,8 +194,40 @@ func (client *Client) RecordRx(packet *WaylandPacket) {
 	client.RxLog = append(client.TxLog, packet)
 
 	// Fallback for objects with unknown interfaces
-	if _, ok := client.ObjectMap[packet.ObjectId]; !ok {
-		client.NewObject(packet.ObjectId)
+	if object, ok := client.ObjectMap[packet.ObjectId]; !ok {
+		client.NewObject(packet.ObjectId, "(unknown)")
+	} else {
+		// Interpret events we understand
+		// TODO: Generalize this based on protocol XML
+		packet.Reset()
+		switch object.Interface {
+		case "wl_registry":
+			switch packet.Opcode {
+			case 0:
+				gid, err := packet.ReadUint32()
+				if err != nil {
+					client.Close(errors.Wrap(err, "wl_registry decode gid"))
+					break
+				}
+				iface, err := packet.ReadString()
+				if err != nil {
+					client.Close(errors.Wrap(err, "wl_registry decode iface"))
+					break
+				}
+				ver, err := packet.ReadUint32()
+				if err != nil {
+					client.Close(errors.Wrap(err, "wl_registry decode version"))
+					break
+				}
+				global := &WaylandGlobal{
+					GlobalId: gid,
+					Interface: iface,
+					Version: ver,
+				}
+				client.Globals = append(client.Globals, global)
+				client.GlobalMap[gid] = global
+			}
+		}
 	}
 
 	client.proxy.onUpdate()
@@ -292,8 +237,24 @@ func (client *Client) RecordTx(packet *WaylandPacket) {
 	client.TxLog = append(client.TxLog, packet)
 
 	// Fallback for objects with unknown interfaces
-	if _, ok := client.ObjectMap[packet.ObjectId]; !ok {
-		client.NewObject(packet.ObjectId)
+	if object, ok := client.ObjectMap[packet.ObjectId]; !ok {
+		client.NewObject(packet.ObjectId, "(unknown)")
+	} else {
+		// Interpret events we understand
+		// TODO: Generalize this based on protocol XML
+		packet.Reset()
+		switch object.Interface {
+		case "wl_display":
+			switch packet.Opcode {
+			case 1: // get_registry
+				oid, err := packet.ReadUint32()
+				if err != nil {
+					client.Close(err)
+					break
+				}
+				client.NewObject(oid, "wl_registry")
+			}
+		}
 	}
 
 	client.proxy.onUpdate()
