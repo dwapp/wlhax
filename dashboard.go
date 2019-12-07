@@ -23,9 +23,6 @@ func NewDashboard(proxy *Proxy) *Dashboard {
 
 	tabs := libui.NewTabs()
 	tabs.Add(clients, "Connections")
-	tabs.Add(libui.NewText("TODO"), "Globals")
-	tabs.Add(libui.NewText("TODO"), "Files")
-	tabs.Add(libui.NewText("TODO"), "Logs")
 
 	status := libui.NewStack()
 	status.Push(libui.NewText(
@@ -52,6 +49,7 @@ func NewDashboard(proxy *Proxy) *Dashboard {
 		tabs:   tabs,
 		status: status,
 	}
+	dash.focus(nil)
 	proxy.OnUpdate(func() {
 		clients.Invalidate()
 	})
@@ -74,7 +72,16 @@ func (dash *Dashboard) Invalidate() {
 
 func (dash *Dashboard) Event(event tcell.Event) bool {
 	if dash.focused != nil {
-		return dash.focused.Event(event)
+		if dash.focused.Event(event) {
+			return true
+		}
+	}
+	interactive, ok := dash.tabs.Tabs[dash.tabs.Selected].
+		Content.(libui.Interactive)
+	if ok {
+		if interactive.Event(event) {
+			return true
+		}
 	}
 	switch event := event.(type) {
 	case *tcell.EventKey:

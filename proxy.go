@@ -30,8 +30,16 @@ type Client struct {
 	proxy  *Proxy
 	remote *net.UnixConn
 
-	Timestamp time.Time
 	Err       error
+	Timestamp time.Time
+
+	RxLog []*WaylandPacket
+	TxLog []*WaylandPacket
+
+	Objects   []*WaylandObject
+	ObjectMap map[uint32]*WaylandObject
+	Globals   []*WaylandGlobal
+	GlobalMap map[uint32]*WaylandGlobal
 }
 
 type WaylandPacket struct {
@@ -40,6 +48,16 @@ type WaylandPacket struct {
 	Opcode    uint16
 	Arguments []byte
 	Fds       []uintptr
+}
+
+type WaylandGlobal struct {
+	Interface string
+	GlobalId  uint32
+}
+
+type WaylandObject struct {
+	ObjectId uint32
+	// TODO: Add interface, if we know it
 }
 
 func NewProxy() (*Proxy, error) {
@@ -181,10 +199,20 @@ func (packet WaylandPacket) WritePacket(conn *net.UnixConn) error {
 }
 
 func (proxy *Proxy) handleClient(conn net.Conn) {
+	wl_display := &WaylandObject{ObjectId: 1}
+
 	client := &Client{
 		conn: conn.(*net.UnixConn),
 
 		Timestamp: time.Now(),
+
+		Objects: []*WaylandObject{wl_display},
+		ObjectMap: map[uint32]*WaylandObject{
+			1: wl_display,
+		},
+
+		Globals: nil,
+		GlobalMap: make(map[uint32]*WaylandGlobal),
 	}
 	proxy.Clients = append(proxy.Clients, client)
 
@@ -207,12 +235,12 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 				client.Close(err)
 				return
 			}
+			client.RecordRx(packet)
 			err = packet.WritePacket(client.conn)
 			if err != nil {
 				client.Close(err)
 				return
 			}
-			proxy.onUpdate()
 		}
 	}()
 
@@ -224,12 +252,12 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 				client.Close(err)
 				return
 			}
+			client.RecordTx(packet)
 			err = packet.WritePacket(client.remote)
 			if err != nil {
 				client.Close(err)
 				return
 			}
-			proxy.onUpdate()
 		}
 	}()
 }
@@ -239,5 +267,34 @@ func (client *Client) Close(err error) {
 	client.remote.Close()
 	client.Timestamp = time.Now()
 	client.Err = err
+	client.proxy.onUpdate()
+}
+
+func (client *Client) NewObject(objectId uint32) *WaylandObject {
+	object := &WaylandObject{ObjectId: objectId}
+	client.ObjectMap[objectId] = object
+	client.Objects = append(client.Objects, object)
+	return object
+}
+
+func (client *Client) RecordRx(packet *WaylandPacket) {
+	client.RxLog = append(client.TxLog, packet)
+
+	// Fallback for objects with unknown interfaces
+	if _, ok := client.ObjectMap[packet.ObjectId]; !ok {
+		client.NewObject(packet.ObjectId)
+	}
+
+	client.proxy.onUpdate()
+}
+
+func (client *Client) RecordTx(packet *WaylandPacket) {
+	client.TxLog = append(client.TxLog, packet)
+
+	// Fallback for objects with unknown interfaces
+	if _, ok := client.ObjectMap[packet.ObjectId]; !ok {
+		client.NewObject(packet.ObjectId)
+	}
+
 	client.proxy.onUpdate()
 }

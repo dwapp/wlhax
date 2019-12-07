@@ -51,8 +51,19 @@ func (clients *ClientsView) Draw(ctx *libui.Context) {
 			style = style.Reverse(true)
 		}
 		w := ctx.Printf(0, y, style,
-			"%p: %s since %s",
-			client, status, client.Timestamp.Format("15:04:05"))
+			"%p: %s", client, status)
+		ctx.Fill(w, y, ctx.Width() - w, 1, ' ', style)
+		y++
+		statusStyle := style.Reverse(false).Foreground(tcell.ColorGreen)
+		if client.Err != nil {
+			statusStyle = statusStyle.Foreground(tcell.ColorRed)
+		}
+		w = ctx.Printf(0, y, statusStyle, "  since %s  ",
+			client.Timestamp.Format("15:04:05"))
+		w += ctx.Printf(w, y, style,
+			"rx: %d packets  tx: %d  globals: %d   objects: %d",
+			len(client.RxLog), len(client.TxLog),
+			len(client.Globals), len(client.Objects))
 		ctx.Fill(w, y, ctx.Width() - w, 1, ' ', style)
 		y++
 	}
@@ -60,4 +71,49 @@ func (clients *ClientsView) Draw(ctx *libui.Context) {
 
 func (clients *ClientsView) Invalidate() {
 	clients.DoInvalidate(clients)
+}
+
+// TODO: Scrolling
+func (clients *ClientsView) SelectNext() {
+	clients.selected += 1
+	if clients.selected >= len(clients.proxy.Clients) {
+		clients.selected = len(clients.proxy.Clients) - 1
+	}
+	clients.Invalidate()
+}
+
+func (clients *ClientsView) SelectPrev() {
+	clients.selected -= 1
+	if clients.selected < 0 {
+		clients.selected = 0
+	}
+	clients.Invalidate()
+}
+
+func (clients *ClientsView) Focus(focus bool) {
+	// This space deliberately left blank
+}
+
+func (clients *ClientsView) Event(event tcell.Event) bool {
+	switch event := event.(type) {
+	case *tcell.EventKey:
+		switch event.Key() {
+		case tcell.KeyDown:
+			clients.SelectNext()
+			return true
+		case tcell.KeyUp:
+			clients.SelectPrev()
+			return true
+		case tcell.KeyRune:
+			switch event.Rune() {
+			case 'j':
+				clients.SelectNext()
+				return true
+			case 'k':
+				clients.SelectPrev()
+				return true
+			}
+		}
+	}
+	return false
 }
