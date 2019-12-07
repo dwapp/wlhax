@@ -7,7 +7,14 @@ import (
 )
 
 func main() {
-	dash := NewDashboard()
+	proxy, err := NewProxy()
+	if err != nil {
+		panic(err)
+	}
+	go proxy.Run()
+	defer proxy.Close()
+
+	dash := NewDashboard(proxy)
 
 	ui, err := libui.Initialize(dash)
 	if err != nil {
