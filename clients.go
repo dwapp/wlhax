@@ -61,7 +61,7 @@ func (clients *ClientsView) Draw(ctx *libui.Context) {
 		w = ctx.Printf(0, y, statusStyle, "  since %s  ",
 			client.Timestamp.Format("15:04:05"))
 		w += ctx.Printf(w, y, style,
-			"rx: %d packets  tx: %d  globals: %d   objects: %d",
+			"rx: %-6d tx %-6d globals %-4d objects %-4d",
 			len(client.RxLog), len(client.TxLog),
 			len(client.Globals), len(client.Objects))
 		ctx.Fill(w, y, ctx.Width() - w, 1, ' ', style)
