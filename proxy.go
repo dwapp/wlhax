@@ -5,7 +5,6 @@ import (
 	"net"
 	"os"
 	"path"
-	"strconv"
 	"sync"
 	"time"
 
@@ -189,7 +188,6 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 			client.proxy.onUpdate()
 			err = packet.WritePacket(client.conn)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "remote err: %v\n", err)
 				client.Close(err)
 				return
 			}
@@ -210,7 +208,6 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 			client.proxy.onUpdate()
 			err = packet.WritePacket(client.remote)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "client err: %v\n", err)
 				client.Close(err)
 				return
 			}
@@ -223,7 +220,6 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 }
 
 func (client *Client) Close(err error) {
-	fmt.Fprintf(os.Stderr, "err: %v\n", err)
 	if client.Err == nil {
 		client.Err = err
 	}
@@ -253,7 +249,6 @@ func (client *Client) NewObject(objectId uint32, iface string) *WaylandObject {
 		Interface: iface,
 		ObjectId:  objectId,
 	}
-	fmt.Fprintf(os.Stderr, "new object: %d, type: %s\n", objectId, strconv.Quote(iface))
 	client.RemoveObject(objectId)
 	client.ObjectMap[objectId] = object
 	client.Objects = append(client.Objects, object)

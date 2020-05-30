@@ -2,8 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
-	"os"
 )
 
 type WlSubCompositorImpl struct {
@@ -57,7 +55,6 @@ func (r *WlSubCompositorImpl) Request(packet *WaylandPacket) error {
 		parent_obj_surface.Next.Children = append(parent_obj_surface.Next.Children, d)
 		source_obj_surface.Next.Role = WlSubSurfaceState{}
 		source_obj_surface.Next.Parent = parent_obj_surface
-		fmt.Fprintf(os.Stderr, "-> wl_subcompositor@%d.get_subsurface(subsurface: %s, surface: %s, parent: %s)\n", packet.ObjectId, obj, source_obj, parent_obj)
 	}
 	return nil
 }

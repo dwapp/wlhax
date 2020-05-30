@@ -2,8 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
-	"os"
 )
 
 // Before anyone asks about the arbitrary indexing with type asserts into deep structures:
@@ -61,7 +59,6 @@ func (r *XdgWmBaseImpl) Request(packet *WaylandPacket) error {
 			Surface: surface_obj_surface,
 		}
 		surface_obj_surface.Next.Role = XdgSurfaceState{}
-		fmt.Fprintf(os.Stderr, "-> xdg_wm_base@%d.get_xdg_surface(xdg_surface: %s, surface: %s)\n", packet.ObjectId, obj, surface_obj)
 	case 3: // pong
 	}
 	return nil
@@ -104,7 +101,6 @@ func (r *XdgSurfaceImpl) Request(packet *WaylandPacket) error {
 		role := xdg_surface.Surface.Next.Role.(XdgSurfaceState)
 		role.XdgRole = XdgToplevelState{}
 		xdg_surface.Surface.Next.Role = role
-		fmt.Fprintf(os.Stderr, "-> xdg_surface@%d.get_toplevel(xdg_stoplevel: %s)\n", packet.ObjectId, obj)
 	case 2: // get_popup
 		oid, err := packet.ReadUint32()
 		if err != nil {
@@ -118,7 +114,6 @@ func (r *XdgSurfaceImpl) Request(packet *WaylandPacket) error {
 		role := xdg_surface.Surface.Next.Role.(XdgSurfaceState)
 		role.XdgRole = XdgPopupState{}
 		xdg_surface.Surface.Next.Role = role
-		fmt.Fprintf(os.Stderr, "-> xdg_surface@%d.get_popup(xdg_popup: %s)\n", packet.ObjectId, obj)
 	case 3: // set_window_geometry
 		x, err := packet.ReadInt32()
 		if err != nil {

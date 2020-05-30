@@ -2,8 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
-	"os"
 )
 
 type CallbackSubscriber interface {
@@ -43,7 +41,6 @@ func (r *WlCallbackImpl) Event(packet *WaylandPacket) error {
 			return errors.New("no such callback")
 		}
 		data := obj.Data.(*WlCallback)
-		fmt.Fprintf(os.Stderr, "wl_callback@%d.done(origin: %s, desc: %s)\n", packet.ObjectId, data.Origin.String(), data.Description)
 		if data.Subscriber != nil {
 			data.Subscriber.Done()
 		}

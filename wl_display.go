@@ -1,10 +1,5 @@
 package main
 
-import (
-	"fmt"
-	"os"
-)
-
 type WlDisplayImpl struct {
 	client *Client
 }
@@ -29,7 +24,6 @@ func (r *WlDisplayImpl) Request(packet *WaylandPacket) error {
 			Origin:      object,
 			Description: "sync",
 		}
-		fmt.Fprintf(os.Stderr, "-> wl_display@%d.sync(callback: %s)\n", packet.ObjectId, obj)
 	case 1: // get_registry
 		oid, err := packet.ReadUint32()
 		if err != nil {
@@ -48,7 +42,6 @@ func (r *WlDisplayImpl) Event(packet *WaylandPacket) error {
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(os.Stderr, "wl_display@%d.delete(id: %d)\n", packet.ObjectId, oid)
 		r.client.RemoveObject(oid)
 	}
 	return nil
