@@ -2,16 +2,26 @@ package main
 
 import (
 	"errors"
+	"fmt"
 )
 
 type WlSubSurfaceState struct {
-	X, Y   int32
-	Desync bool
+	SubSurface *WlSubSurface
+	X, Y       int32
+	Desync     bool
+}
+
+func (s *WlSubSurfaceState) String() string {
+	return s.SubSurface.String()
 }
 
 type WlSubSurface struct {
 	Object  *WaylandObject
 	Surface *WlSurface
+}
+
+func (r *WlSubSurface) String() string {
+	return fmt.Sprintf("wl_subsurface@%d", r.Object.ObjectId)
 }
 
 func (r *WlSubSurface) Destroy() error {

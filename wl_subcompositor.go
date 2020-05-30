@@ -53,7 +53,9 @@ func (r *WlSubCompositorImpl) Request(packet *WaylandPacket) error {
 		}
 		obj.Data = d
 		parent_obj_surface.Next.Children = append(parent_obj_surface.Next.Children, d)
-		source_obj_surface.Next.Role = WlSubSurfaceState{}
+		source_obj_surface.Next.Role = WlSubSurfaceState{
+			SubSurface: d,
+		}
 		source_obj_surface.Next.Parent = parent_obj_surface
 	}
 	return nil

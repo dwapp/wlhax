@@ -6,6 +6,11 @@ import (
 )
 
 type WlPointerSurfaceState struct {
+	WlPointer *WlPointer
+}
+
+func (s *WlPointerSurfaceState) String() string {
+	return s.WlPointer.Object.String()
 }
 
 type WlPointer struct {
@@ -61,7 +66,9 @@ func (r *WlPointerImpl) Request(packet *WaylandPacket) error {
 		if !ok {
 			return errors.New("object is not surface")
 		}
-		source_obj_surface.Next.Role = WlPointerSurfaceState{}
+		source_obj_surface.Next.Role = WlPointerSurfaceState{
+			WlPointer: obj,
+		}
 		obj.PointerSurface = source_obj_surface
 	case 1: // release
 	}

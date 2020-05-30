@@ -43,17 +43,19 @@ func (clients *ClientsView) showSurface(ctx *libui.Context, surface *WlSurface, 
 		switch role := surface.Current.Role.(type) {
 		case WlSubSurfaceState:
 			suffix = fmt.Sprintf(", desync: %t, x: %d, y: %d", role.Desync, role.X, role.Y)
-			rolestr = "wl_subsurface"
+			rolestr = role.String()
 		case WlPointerSurfaceState:
-			rolestr = "wl_pointer"
+			rolestr = role.String()
 		case XdgSurfaceState:
-			rolestr = "xdg_surface"
+			rolestr = role.String()
 			switch xdg_role := role.XdgRole.(type) {
 			case XdgToplevelState:
-				rolestr = "xdg_toplevel"
 				suffix = fmt.Sprintf(", app_id: %s, title: %s", xdg_role.AppId, xdg_role.Title)
+				if xdg_role.Parent != nil {
+					suffix = fmt.Sprintf("%s, parent: %s", suffix, xdg_role.Parent.Object.String())
+				}
 			case XdgPopupState:
-				rolestr = "xdg_popup"
+				suffix = fmt.Sprintf(", parent: %s", xdg_role.XdgPopup.Parent.Object.String())
 			}
 		}
 	}

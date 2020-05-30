@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"io"
 )
 
 // Before anyone asks about the arbitrary indexing with type asserts into deep structures:
@@ -10,9 +11,20 @@ import (
 //
 
 type XdgSurfaceState struct {
+	XdgSurface                                 *XdgSurface
 	CurrentConfigure, PendingConfigure         int32
 	GeometryX, GeometryY, GeometryW, GeometryH int32
 	XdgRole                                    interface{}
+}
+
+func (s *XdgSurfaceState) String() string {
+	if s.XdgRole != nil {
+		stringer := s.XdgRole.(interface {
+			String() string
+		})
+		return stringer.String()
+	}
+	return s.XdgSurface.Object.String()
 }
 
 type XdgSurface struct {
@@ -55,10 +67,14 @@ func (r *XdgWmBaseImpl) Request(packet *WaylandPacket) error {
 		surface_obj_surface := surface_obj.Data.(*WlSurface)
 
 		obj := r.client.NewObject(oid, "xdg_surface")
-		obj.Data = &XdgSurface{
+		s := &XdgSurface{
+			Object:  obj,
 			Surface: surface_obj_surface,
 		}
-		surface_obj_surface.Next.Role = XdgSurfaceState{}
+		obj.Data = s
+		surface_obj_surface.Next.Role = XdgSurfaceState{
+			XdgSurface: s,
+		}
 	case 3: // pong
 	}
 	return nil
@@ -94,25 +110,41 @@ func (r *XdgSurfaceImpl) Request(packet *WaylandPacket) error {
 			return err
 		}
 		obj := r.client.NewObject(oid, "xdg_toplevel")
-		obj.Data = &XdgToplevel{
+		t := &XdgToplevel{
 			Object:     obj,
 			XdgSurface: xdg_surface,
 		}
+		obj.Data = t
 		role := xdg_surface.Surface.Next.Role.(XdgSurfaceState)
-		role.XdgRole = XdgToplevelState{}
+		role.XdgRole = XdgToplevelState{
+			XdgToplevel: t,
+		}
 		xdg_surface.Surface.Next.Role = role
 	case 2: // get_popup
 		oid, err := packet.ReadUint32()
 		if err != nil {
 			return err
 		}
+		pid, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		parentobj, ok := r.client.ObjectMap[pid]
+		if !ok {
+			return errors.New("no such object")
+		}
+		parent := parentobj.Data.(*XdgSurface)
 		obj := r.client.NewObject(oid, "xdg_popup")
-		obj.Data = &XdgPopup{
+		p := &XdgPopup{
 			Object:     obj,
 			XdgSurface: object.Data.(*XdgSurface),
+			Parent:     parent,
 		}
+		obj.Data = p
 		role := xdg_surface.Surface.Next.Role.(XdgSurfaceState)
-		role.XdgRole = XdgPopupState{}
+		role.XdgRole = XdgPopupState{
+			XdgPopup: p,
+		}
 		xdg_surface.Surface.Next.Role = role
 	case 3: // set_window_geometry
 		x, err := packet.ReadInt32()
@@ -162,8 +194,14 @@ func (r *XdgSurfaceImpl) Event(packet *WaylandPacket) error {
 }
 
 type XdgToplevelState struct {
-	Title string
-	AppId string
+	XdgToplevel *XdgToplevel
+	Title       string
+	AppId       string
+	Parent      *XdgToplevel
+}
+
+func (s XdgToplevelState) String() string {
+	return s.XdgToplevel.Object.String()
 }
 
 type XdgToplevel struct {
@@ -197,6 +235,20 @@ func (r *XdgToplevelImpl) Request(packet *WaylandPacket) error {
 	switch packet.Opcode {
 	case 0: // destroy
 	case 1: // set_parent
+		oid, err := packet.ReadUint32()
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if oid == 0 {
+			toplevelstate.Parent = nil
+			break
+		}
+		obj, ok := r.client.ObjectMap[oid]
+		if !ok {
+			return errors.New("no such object")
+		}
+		toplevel := obj.Data.(*XdgToplevel)
+		toplevelstate.Parent = toplevel
 	case 2: // set_title
 		str, err := packet.ReadString()
 		if err != nil {
@@ -234,11 +286,17 @@ func (r *XdgToplevelImpl) Event(packet *WaylandPacket) error {
 }
 
 type XdgPopupState struct {
+	XdgPopup *XdgPopup
+}
+
+func (s XdgPopupState) String() string {
+	return s.XdgPopup.Object.String()
 }
 
 type XdgPopup struct {
 	Object     *WaylandObject
 	XdgSurface *XdgSurface
+	Parent     *XdgSurface
 }
 
 func (t *XdgPopup) Destroy() error {
