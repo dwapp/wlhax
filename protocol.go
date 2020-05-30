@@ -25,12 +25,6 @@ type WaylandGlobal struct {
 	Version   uint32
 }
 
-type WaylandObject struct {
-	ObjectId  uint32
-	Interface string
-	// TODO: Add interface, if we know it
-}
-
 func ReadPacket(conn *net.UnixConn) (*WaylandPacket, error) {
 	var fds []uintptr
 	var buf [8]byte
@@ -57,10 +51,9 @@ func ReadPacket(conn *net.UnixConn) (*WaylandPacket, error) {
 			if err != nil {
 				return nil, errors.New("Unable to parse unix rights")
 			}
-			if len(_fds) != 1 {
-				return nil, errors.New("Unexpectedly got >1 file descriptor")
+			for _, fd := range _fds {
+				fds = append(fds, uintptr(fd))
 			}
-			fds = append(fds, uintptr(_fds[0]))
 		}
 	}
 
@@ -71,13 +64,13 @@ func ReadPacket(conn *net.UnixConn) (*WaylandPacket, error) {
 		Fds:      fds,
 	}
 
-	packet.Arguments = make([]byte, packet.Length - 8)
+	packet.Arguments = make([]byte, packet.Length-8)
 
 	n, err = conn.Read(packet.Arguments)
 	if err != nil {
 		return nil, err
 	}
-	if int(packet.Length - 8) != len(packet.Arguments) {
+	if int(packet.Length-8) != len(packet.Arguments) {
 		return nil, errors.New("Buffer is shorter than expected length")
 	}
 
@@ -116,10 +109,16 @@ func (packet *WaylandPacket) Reset() {
 }
 
 func szup(n uint32) uint32 {
-	if n % 4 == 0 {
+	if n%4 == 0 {
 		return n
 	}
-	return n+(4-(n%4))
+	return n + (4 - (n % 4))
+}
+
+func (packet *WaylandPacket) ReadInt32() (int32, error) {
+	var out int32
+	err := binary.Read(packet.buffer, binary.LittleEndian, &out)
+	return out, err
 }
 
 func (packet *WaylandPacket) ReadUint32() (uint32, error) {
@@ -143,5 +142,9 @@ func (packet *WaylandPacket) ReadString() (string, error) {
 	if n != int(pl) {
 		return "", errors.New("ReadString underread")
 	}
-	return string(buf[:l]), nil
+	return string(buf[:l-1]), nil
+}
+
+func (packet *WaylandPacket) Data() []byte {
+	return packet.buffer.Bytes()
 }

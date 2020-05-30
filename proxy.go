@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"path"
+	"strconv"
+	"sync"
 	"time"
 
 	"github.com/kyoh86/xdg"
@@ -23,6 +26,15 @@ type Proxy struct {
 	Clients []*Client
 }
 
+type Implementation interface {
+	Request(packet *WaylandPacket) error
+	Event(packet *WaylandPacket) error
+}
+
+type Destroyable interface {
+	Destroy() error
+}
+
 type Client struct {
 	conn   *net.UnixConn
 	proxy  *Proxy
@@ -38,6 +50,20 @@ type Client struct {
 	ObjectMap map[uint32]*WaylandObject
 	Globals   []*WaylandGlobal
 	GlobalMap map[uint32]*WaylandGlobal
+
+	objectLock sync.RWMutex
+
+	Impls map[string]Implementation
+}
+
+type WaylandObject struct {
+	ObjectId  uint32
+	Interface string
+	Data      Destroyable
+}
+
+func (wo *WaylandObject) String() string {
+	return fmt.Sprintf("%s@%d", wo.Interface, wo.ObjectId)
 }
 
 func NewProxy() (*Proxy, error) {
@@ -102,7 +128,7 @@ func (proxy *Proxy) OnUpdate(onUpdate func()) {
 func (proxy *Proxy) handleClient(conn net.Conn) {
 	wl_display := &WaylandObject{
 		Interface: "wl_display",
-		ObjectId: 1,
+		ObjectId:  1,
 	}
 
 	client := &Client{
@@ -115,10 +141,20 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 			1: wl_display,
 		},
 
-		Globals: nil,
+		Globals:   nil,
 		GlobalMap: make(map[uint32]*WaylandGlobal),
+
+		Impls: make(map[string]Implementation),
 	}
 	proxy.Clients = append(proxy.Clients, client)
+
+	RegisterWlDisplay(client)
+	RegisterWlRegistry(client)
+	RegisterWlCallback(client)
+	RegisterWlCompositor(client)
+	RegisterWlSubCompositor(client)
+	RegisterWlSurface(client)
+	RegisterWlSubSurface(client)
 
 	remote, err := net.Dial("unix", proxy.remotePath)
 	if err != nil {
@@ -180,11 +216,37 @@ func (client *Client) Close(err error) {
 	client.proxy.onUpdate()
 }
 
+func (client *Client) removeObject(objectId uint32) {
+	if o, ok := client.ObjectMap[objectId]; ok {
+		for idx := range client.Objects {
+			if client.Objects[idx] == o {
+				client.Objects = append(client.Objects[:idx], client.Objects[idx+1:]...)
+				break
+			}
+		}
+		if o.Data != nil {
+			o.Data.Destroy()
+		}
+		delete(client.ObjectMap, objectId)
+	}
+}
+
+func (client *Client) RemoveObject(objectId uint32) {
+	client.objectLock.Lock()
+	defer client.objectLock.Unlock()
+	client.removeObject(objectId)
+}
+
 func (client *Client) NewObject(objectId uint32, iface string) *WaylandObject {
+	client.objectLock.Lock()
+	defer client.objectLock.Unlock()
+
 	object := &WaylandObject{
 		Interface: iface,
 		ObjectId:  objectId,
 	}
+	fmt.Fprintf(os.Stderr, "new object: %d, type: %s\n", objectId, strconv.Quote(iface))
+	client.removeObject(objectId)
 	client.ObjectMap[objectId] = object
 	client.Objects = append(client.Objects, object)
 	return object
@@ -197,35 +259,9 @@ func (client *Client) RecordRx(packet *WaylandPacket) {
 	if object, ok := client.ObjectMap[packet.ObjectId]; !ok {
 		client.NewObject(packet.ObjectId, "(unknown)")
 	} else {
-		// Interpret events we understand
-		// TODO: Generalize this based on protocol XML
-		packet.Reset()
-		switch object.Interface {
-		case "wl_registry":
-			switch packet.Opcode {
-			case 0:
-				gid, err := packet.ReadUint32()
-				if err != nil {
-					client.Close(errors.Wrap(err, "wl_registry decode gid"))
-					break
-				}
-				iface, err := packet.ReadString()
-				if err != nil {
-					client.Close(errors.Wrap(err, "wl_registry decode iface"))
-					break
-				}
-				ver, err := packet.ReadUint32()
-				if err != nil {
-					client.Close(errors.Wrap(err, "wl_registry decode version"))
-					break
-				}
-				global := &WaylandGlobal{
-					GlobalId: gid,
-					Interface: iface,
-					Version: ver,
-				}
-				client.Globals = append(client.Globals, global)
-				client.GlobalMap[gid] = global
+		if impl, ok := client.Impls[object.Interface]; ok {
+			if err := impl.Event(packet); err != nil {
+				client.Close(err)
 			}
 		}
 	}
@@ -240,19 +276,9 @@ func (client *Client) RecordTx(packet *WaylandPacket) {
 	if object, ok := client.ObjectMap[packet.ObjectId]; !ok {
 		client.NewObject(packet.ObjectId, "(unknown)")
 	} else {
-		// Interpret events we understand
-		// TODO: Generalize this based on protocol XML
-		packet.Reset()
-		switch object.Interface {
-		case "wl_display":
-			switch packet.Opcode {
-			case 1: // get_registry
-				oid, err := packet.ReadUint32()
-				if err != nil {
-					client.Close(err)
-					break
-				}
-				client.NewObject(oid, "wl_registry")
+		if impl, ok := client.Impls[object.Interface]; ok {
+			if err := impl.Request(packet); err != nil {
+				client.Close(err)
 			}
 		}
 	}
