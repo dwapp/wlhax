@@ -161,6 +161,14 @@ func (dash *Dashboard) BeginExCommand(cmd string) {
 			dash.proxy.SlowMode = true
 		case "fast":
 			dash.proxy.SlowMode = false
+		case "clear":
+			var new_clients []*Client
+			for _, client := range dash.proxy.Clients {
+				if client.Err == nil {
+					new_clients = append(new_clients, client)
+				}
+			}
+			dash.proxy.Clients = new_clients
 		}
 	}, func() {
 		dash.status.Pop()
