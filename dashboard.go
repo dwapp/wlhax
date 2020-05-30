@@ -28,7 +28,7 @@ func NewDashboard(proxy *Proxy) *Dashboard {
 	status.Push(libui.NewText(
 		fmt.Sprintf("WAYLAND_DISPLAY=%s -> %s",
 			proxy.ProxyDisplay(), proxy.RemoteDisplay())).
-			Reverse(true))
+		Reverse(true))
 
 	grid := libui.NewGrid().Rows([]libui.GridSpec{
 		{libui.SIZE_EXACT, 1},
@@ -157,6 +157,10 @@ func (dash *Dashboard) BeginExCommand(cmd string) {
 			}
 			cmd := exec.Command(parts[1], parts[2:]...)
 			cmd.Start()
+		case "slow":
+			dash.proxy.SlowMode = true
+		case "fast":
+			dash.proxy.SlowMode = false
 		}
 	}, func() {
 		dash.status.Pop()

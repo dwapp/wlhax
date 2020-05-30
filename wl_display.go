@@ -29,7 +29,7 @@ func (r *WlDisplayImpl) Request(packet *WaylandPacket) error {
 			Origin:      object,
 			Description: "sync",
 		}
-		fmt.Fprintf(os.Stderr, "-> wl_display@%d.sync(callback: %d)\n", packet.ObjectId, obj)
+		fmt.Fprintf(os.Stderr, "-> wl_display@%d.sync(callback: %s)\n", packet.ObjectId, obj)
 	case 1: // get_registry
 		oid, err := packet.ReadUint32()
 		if err != nil {

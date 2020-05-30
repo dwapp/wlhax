@@ -50,7 +50,7 @@ func (r *WlSubCompositorImpl) Request(packet *WaylandPacket) error {
 		}
 		obj := r.client.NewObject(oid, "wl_subsurface")
 		d := &WlSubSurface{
-			ID:      oid,
+			Object:  obj,
 			Surface: source_obj_surface,
 		}
 		obj.Data = d

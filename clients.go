@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	libui "git.sr.ht/~sircmpwn/aerc/lib/ui"
 	"github.com/gdamore/tcell"
 )
@@ -35,8 +36,29 @@ func (clients *ClientsView) showSurface(ctx *libui.Context, surface *WlSurface, 
 		prefix += "   "
 	}
 	prefix += " - "
+
+	rolestr := "<unknown>"
+	suffix := ""
+	if surface.Current.Role != nil {
+		switch role := surface.Current.Role.(type) {
+		case WlSubSurfaceState:
+			suffix = fmt.Sprintf(", desync: %t, x: %d, y: %d", role.Desync, role.X, role.Y)
+			rolestr = "wl_subsurface"
+		case WlPointerSurfaceState:
+			rolestr = "wl_pointer"
+		case XdgSurfaceState:
+			rolestr = "xdg_surface"
+			switch xdg_role := role.XdgRole.(type) {
+			case XdgToplevelState:
+				rolestr = "xdg_toplevel"
+				suffix = fmt.Sprintf(", app_id: %s, title: %s", xdg_role.AppId, xdg_role.Title)
+			case XdgPopupState:
+				rolestr = "xdg_popup"
+			}
+		}
+	}
 	ctx.Printf(0, y, tcell.StyleDefault,
-		"%ssurface: %s, frames: %d, pending frames: %d", prefix, surface, surface.Frames, surface.PendingFrames)
+		"%s%s, role: %s, buffers: %d, frames: %d/%d%s", prefix, surface.Object, rolestr, surface.Current.BufferNum, surface.Frames, surface.RequestedFrames, suffix)
 	y++
 	if y >= ctx.Height() {
 		return y

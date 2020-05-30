@@ -25,7 +25,7 @@ func (r *WlCompositorImpl) Request(packet *WaylandPacket) error {
 		}
 		obj := r.client.NewObject(oid, "wl_surface")
 		obj.Data = &WlSurface{
-			ID: oid,
+			Object: obj,
 		}
 		fmt.Fprintf(os.Stderr, "-> wl_compositor@%d.create_surface(surface: %s)\n", packet.ObjectId, obj)
 	case 1: // create_region

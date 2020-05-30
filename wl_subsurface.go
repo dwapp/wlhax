@@ -10,7 +10,7 @@ type WlSubSurfaceState struct {
 }
 
 type WlSubSurface struct {
-	ID      uint32
+	Object  *WaylandObject
 	Surface *WlSurface
 }
 

@@ -24,6 +24,8 @@ type Proxy struct {
 	onUpdate      func()
 
 	Clients []*Client
+
+	SlowMode bool
 }
 
 type Implementation interface {
@@ -51,7 +53,7 @@ type Client struct {
 	Globals   []*WaylandGlobal
 	GlobalMap map[uint32]*WaylandGlobal
 
-	objectLock sync.RWMutex
+	lock sync.RWMutex
 
 	Impls map[string]Implementation
 }
@@ -151,10 +153,16 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 	RegisterWlDisplay(client)
 	RegisterWlRegistry(client)
 	RegisterWlCallback(client)
+	RegisterWlSeat(client)
+	RegisterWlPointer(client)
 	RegisterWlCompositor(client)
 	RegisterWlSubCompositor(client)
 	RegisterWlSurface(client)
 	RegisterWlSubSurface(client)
+	RegisterXdgWmBase(client)
+	RegisterXdgSurface(client)
+	RegisterXdgToplevel(client)
+	RegisterXdgPopup(client)
 
 	remote, err := net.Dial("unix", proxy.remotePath)
 	if err != nil {
@@ -175,9 +183,13 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 				client.Close(err)
 				return
 			}
+			client.lock.Lock()
 			client.RecordRx(packet)
+			client.lock.Unlock()
+			client.proxy.onUpdate()
 			err = packet.WritePacket(client.conn)
 			if err != nil {
+				fmt.Fprintf(os.Stderr, "remote err: %v\n", err)
 				client.Close(err)
 				return
 			}
@@ -192,9 +204,13 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 				client.Close(err)
 				return
 			}
+			client.lock.Lock()
 			client.RecordTx(packet)
+			client.lock.Unlock()
+			client.proxy.onUpdate()
 			err = packet.WritePacket(client.remote)
 			if err != nil {
+				fmt.Fprintf(os.Stderr, "client err: %v\n", err)
 				client.Close(err)
 				return
 			}
@@ -207,6 +223,7 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 }
 
 func (client *Client) Close(err error) {
+	fmt.Fprintf(os.Stderr, "err: %v\n", err)
 	if client.Err == nil {
 		client.Err = err
 	}
@@ -216,7 +233,7 @@ func (client *Client) Close(err error) {
 	client.proxy.onUpdate()
 }
 
-func (client *Client) removeObject(objectId uint32) {
+func (client *Client) RemoveObject(objectId uint32) {
 	if o, ok := client.ObjectMap[objectId]; ok {
 		for idx := range client.Objects {
 			if client.Objects[idx] == o {
@@ -231,22 +248,13 @@ func (client *Client) removeObject(objectId uint32) {
 	}
 }
 
-func (client *Client) RemoveObject(objectId uint32) {
-	client.objectLock.Lock()
-	defer client.objectLock.Unlock()
-	client.removeObject(objectId)
-}
-
 func (client *Client) NewObject(objectId uint32, iface string) *WaylandObject {
-	client.objectLock.Lock()
-	defer client.objectLock.Unlock()
-
 	object := &WaylandObject{
 		Interface: iface,
 		ObjectId:  objectId,
 	}
 	fmt.Fprintf(os.Stderr, "new object: %d, type: %s\n", objectId, strconv.Quote(iface))
-	client.removeObject(objectId)
+	client.RemoveObject(objectId)
 	client.ObjectMap[objectId] = object
 	client.Objects = append(client.Objects, object)
 	return object
@@ -265,8 +273,6 @@ func (client *Client) RecordRx(packet *WaylandPacket) {
 			}
 		}
 	}
-
-	client.proxy.onUpdate()
 }
 
 func (client *Client) RecordTx(packet *WaylandPacket) {
@@ -282,6 +288,4 @@ func (client *Client) RecordTx(packet *WaylandPacket) {
 			}
 		}
 	}
-
-	client.proxy.onUpdate()
 }

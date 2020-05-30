@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 )
 
 type WlSurfaceState struct {
@@ -19,20 +20,15 @@ type WlSurfaceState struct {
 }
 
 type WlSurface struct {
-	ID            uint32
-	Frames        uint32
-	PendingFrames uint32
-	Current, Next WlSurfaceState
+	Object          *WaylandObject
+	Frames          uint32
+	RequestedFrames uint32
+	Current, Next   WlSurfaceState
 }
 
 func (r *WlSurface) Done() error {
 	r.Frames += 1
-	r.PendingFrames -= 1
 	return nil
-}
-
-func (r *WlSurface) String() string {
-	return fmt.Sprintf("wl_surface@%d(bufferNum: %d)", r.ID, r.Current.BufferNum)
 }
 
 func (r *WlSurface) Destroy() error {
@@ -115,7 +111,7 @@ func (r *WlSurfaceImpl) Request(packet *WaylandPacket) error {
 			Description: "frame",
 			Subscriber:  obj,
 		}
-		obj.PendingFrames += 1
+		obj.RequestedFrames += 1
 
 		fmt.Fprintf(os.Stderr, "-> wl_surface@%d.frame(callback: %s)\n", packet.ObjectId, cb)
 	case 4: // set_opaque_region
@@ -126,6 +122,9 @@ func (r *WlSurfaceImpl) Request(packet *WaylandPacket) error {
 		// TODO: maybe we're messing up the children slice when we do things like this
 		obj.Current = obj.Next
 		fmt.Fprintf(os.Stderr, "-> wl_surface@%d.commit()\n", packet.ObjectId)
+		if r.client.proxy.SlowMode {
+			time.Sleep(250 * time.Millisecond)
+		}
 	case 7: // set_buffer_transform
 		transform, err := packet.ReadInt32()
 		if err != nil {
