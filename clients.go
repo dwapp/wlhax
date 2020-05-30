@@ -15,6 +15,8 @@ Welcome to wlhax! Use the arrow keys to navigate between tabs and menu items
 A Wayland display is running at the Unix socket shown at the bottom of the
 screen. You can start Wayland clients pointing to this address manually, or use
 :exec <command>... to have wlhax start one for you.
+
+Commands: exec, slow, fast, clear, block, unblock
 `
 )
 
