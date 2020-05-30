@@ -60,14 +60,11 @@ func (clients *ClientsView) showSurface(ctx *libui.Context, surface *WlSurface, 
 	ctx.Printf(0, y, tcell.StyleDefault,
 		"%s%s, role: %s, buffers: %d, frames: %d/%d%s", prefix, surface.Object, rolestr, surface.Current.BufferNum, surface.Frames, surface.RequestedFrames, suffix)
 	y++
-	if y >= ctx.Height() {
-		return y
-	}
 	for _, child := range surface.Current.Children {
-		y = clients.showSurface(ctx, child.Surface, y, depth+1)
 		if y >= ctx.Height() {
 			return y
 		}
+		y = clients.showSurface(ctx, child.Surface, y, depth+1)
 	}
 	return y
 }
@@ -111,15 +108,15 @@ func (clients *ClientsView) Draw(ctx *libui.Context) {
 		ctx.Fill(w, y, ctx.Width()-w, 1, ' ', style)
 		y++
 		for _, obj := range client.Objects {
+			if y >= ctx.Height() {
+				break
+			}
 			if obj.Interface == "wl_surface" {
 				surface := obj.Data.(*WlSurface)
 				if surface.Current.Parent != nil {
 					continue
 				}
 				y = clients.showSurface(ctx, surface, y, 0)
-				if y >= ctx.Height() {
-					break
-				}
 			}
 		}
 	}
