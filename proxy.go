@@ -25,6 +25,7 @@ type Proxy struct {
 	Clients []*Client
 
 	SlowMode bool
+	Block    bool
 }
 
 type Implementation interface {
@@ -205,6 +206,9 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 			client.lock.Lock()
 			client.RecordTx(packet)
 			client.lock.Unlock()
+			for proxy.Block {
+				time.Sleep(500 * time.Millisecond)
+			}
 			client.proxy.onUpdate()
 			err = packet.WritePacket(client.remote)
 			if err != nil {

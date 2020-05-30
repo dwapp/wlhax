@@ -169,6 +169,10 @@ func (dash *Dashboard) BeginExCommand(cmd string) {
 				}
 			}
 			dash.proxy.Clients = new_clients
+		case "block":
+			dash.proxy.Block = true
+		case "unblock":
+			dash.proxy.Block = false
 		}
 	}, func() {
 		dash.status.Pop()
