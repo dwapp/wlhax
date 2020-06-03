@@ -10,9 +10,15 @@ import (
 //   Yes, I know. I regret everything.
 //
 
+type XdgConfigure struct {
+	Serial int32
+	Width  int32
+	Height int32
+}
+
 type XdgSurfaceState struct {
 	XdgSurface                                 *XdgSurface
-	CurrentConfigure, PendingConfigure         int32
+	CurrentConfigure, PendingConfigure         XdgConfigure
 	GeometryX, GeometryY, GeometryW, GeometryH int32
 	XdgRole                                    interface{}
 }
@@ -172,7 +178,10 @@ func (r *XdgSurfaceImpl) Request(packet *WaylandPacket) error {
 		if err != nil {
 			return err
 		}
-		robj.CurrentConfigure = conf
+		if robj.PendingConfigure.Serial == conf {
+			robj.CurrentConfigure = robj.PendingConfigure
+		}
+		xdg_surface.Surface.Next.Role = robj
 	}
 	return nil
 }
@@ -186,8 +195,7 @@ func (r *XdgSurfaceImpl) Event(packet *WaylandPacket) error {
 		if err != nil {
 			return err
 		}
-		robj.PendingConfigure = conf
-
+		robj.PendingConfigure.Serial = conf
 	}
 	object.Data.(*XdgSurface).Surface.Next.Role = robj
 	return nil
@@ -278,8 +286,22 @@ func (r *XdgToplevelImpl) Request(packet *WaylandPacket) error {
 }
 
 func (r *XdgToplevelImpl) Event(packet *WaylandPacket) error {
+	object := r.client.ObjectMap[packet.ObjectId]
+	xdg_surface := object.Data.(*XdgToplevel).XdgSurface
+	xdgstate := xdg_surface.Surface.Next.Role.(XdgSurfaceState)
 	switch packet.Opcode {
 	case 0: // configure
+		width, err := packet.ReadInt32()
+		if err != nil && err != io.EOF {
+			return err
+		}
+		height, err := packet.ReadInt32()
+		if err != nil && err != io.EOF {
+			return err
+		}
+		xdgstate.PendingConfigure.Width = width
+		xdgstate.PendingConfigure.Height = height
+		xdg_surface.Surface.Next.Role = xdgstate
 	case 1: // close
 	}
 	return nil

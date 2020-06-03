@@ -41,6 +41,7 @@ func (clients *ClientsView) showSurface(ctx *libui.Context, surface *WlSurface, 
 
 	rolestr := "<unknown>"
 	suffix := ""
+	details := ""
 	if surface.Current.Role != nil {
 		switch role := surface.Current.Role.(type) {
 		case WlSubSurfaceState:
@@ -56,6 +57,11 @@ func (clients *ClientsView) showSurface(ctx *libui.Context, surface *WlSurface, 
 				if xdg_role.Parent != nil {
 					suffix = fmt.Sprintf("%s, parent: %s", suffix, xdg_role.Parent.Object.String())
 				}
+				if role.CurrentConfigure.Serial == role.PendingConfigure.Serial {
+					details = fmt.Sprintf("current: w=%d h=%d", role.CurrentConfigure.Width, role.CurrentConfigure.Height)
+				} else {
+					details = fmt.Sprintf("current: w=%d h=%d, pending: w=%d h=%d", role.CurrentConfigure.Width, role.CurrentConfigure.Height, role.PendingConfigure.Width, role.PendingConfigure.Height)
+				}
 			case XdgPopupState:
 				suffix = fmt.Sprintf(", parent: %s", xdg_role.XdgPopup.Parent.Object.String())
 			}
@@ -64,6 +70,15 @@ func (clients *ClientsView) showSurface(ctx *libui.Context, surface *WlSurface, 
 	ctx.Printf(0, y, tcell.StyleDefault,
 		"%s%s, role: %s, buffers: %d, frames: %d/%d%s", prefix, surface.Object, rolestr, surface.Current.BufferNum, surface.Frames, surface.RequestedFrames, suffix)
 	y++
+	if details != "" && y < ctx.Height() {
+		prefix := ""
+		for i := 0; i <= depth+3; i++ {
+			prefix += "   "
+		}
+		ctx.Printf(0, y, tcell.StyleDefault,
+			"%s%s", prefix, details)
+		y++
+	}
 	for _, child := range surface.Current.Children {
 		if y >= ctx.Height() {
 			return y
