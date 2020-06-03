@@ -28,7 +28,7 @@ type WaylandGlobal struct {
 func ReadPacket(conn *net.UnixConn) (*WaylandPacket, error) {
 	var fds []uintptr
 	var buf [8]byte
-	control := make([]byte, 24)
+	control := make([]byte, 128)
 
 	n, oobn, _, _, err := conn.ReadMsgUnix(buf[:], control)
 	if err != nil {
@@ -42,7 +42,7 @@ func ReadPacket(conn *net.UnixConn) (*WaylandPacket, error) {
 			return nil, errors.New("Control message buffer undersized")
 		}
 
-		ctrl, err := unix.ParseSocketControlMessage(control)
+		ctrl, err := unix.ParseSocketControlMessage(control[:oobn])
 		if err != nil {
 			return nil, err
 		}
