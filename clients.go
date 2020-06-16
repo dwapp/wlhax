@@ -110,7 +110,7 @@ func (clients *ClientsView) Draw(ctx *libui.Context) {
 			style = style.Reverse(true)
 		}
 		w := ctx.Printf(0, y, style,
-			"%p: %s", client, status)
+			"%v: %s", client, status)
 		ctx.Fill(w, y, ctx.Width()-w, 1, ' ', style)
 		y++
 		statusStyle := style.Reverse(false).Foreground(tcell.ColorGreen)

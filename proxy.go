@@ -41,6 +41,7 @@ type Client struct {
 	conn   *net.UnixConn
 	proxy  *Proxy
 	remote *net.UnixConn
+	pid    int32
 
 	Err       error
 	Timestamp time.Time
@@ -56,6 +57,10 @@ type Client struct {
 	lock sync.RWMutex
 
 	Impls map[string]Implementation
+}
+
+func (c *Client) String() string {
+	return fmt.Sprintf("Client { pid: %d }", c.pid)
 }
 
 type WaylandObject struct {
@@ -148,6 +153,10 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 
 		Impls: make(map[string]Implementation),
 	}
+
+	pid, _ := getPidOfConn(client.conn)
+	client.pid = pid
+
 	proxy.Clients = append(proxy.Clients, client)
 
 	RegisterWlDisplay(client)
