@@ -16,6 +16,7 @@ type Dashboard struct {
 	proxy   *Proxy
 	status  *libui.Stack
 	tabs    *libui.Tabs
+	tabMap  map[*Client]*ClientView
 }
 
 func NewDashboard(proxy *Proxy) *Dashboard {
@@ -44,14 +45,38 @@ func NewDashboard(proxy *Proxy) *Dashboard {
 	grid.AddChild(status).At(2, 0).Span(1, 2)
 
 	dash := &Dashboard{
+		tabMap: make(map[*Client]*ClientView),
 		grid:   grid,
 		proxy:  proxy,
 		tabs:   tabs,
 		status: status,
 	}
 	dash.focus(nil)
-	proxy.OnUpdate(func() {
+	proxy.OnUpdate(func(c *Client) {
 		clients.Invalidate()
+		v := dash.tabMap[c]
+		if v != nil {
+			v.Invalidate()
+		}
+	})
+	proxy.OnConnect(func(c *Client) {
+		clients.Invalidate()
+		v := dash.tabMap[c]
+		if v != nil {
+			// ???
+			delete(dash.tabMap, c)
+			tabs.Remove(v)
+		}
+		v = NewClientView(c)
+		dash.tabMap[c] = v
+		tabs.Add(v, fmt.Sprintf("Client %d", c.Pid()))
+	})
+	proxy.OnDisconnect(func(c *Client) {
+		clients.Invalidate()
+		v := dash.tabMap[c]
+		if v != nil {
+			v.Invalidate()
+		}
 	})
 	return dash
 }
@@ -166,6 +191,12 @@ func (dash *Dashboard) BeginExCommand(cmd string) {
 			for _, client := range dash.proxy.Clients {
 				if client.Err == nil {
 					new_clients = append(new_clients, client)
+				} else {
+					v := dash.tabMap[client]
+					if v != nil {
+						delete(dash.tabMap, client)
+						dash.tabs.Remove(v)
+					}
 				}
 			}
 			dash.proxy.Clients = new_clients

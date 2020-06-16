@@ -20,7 +20,9 @@ type Proxy struct {
 	proxyDisplay  string
 	remoteDisplay string
 	remotePath    string
-	onUpdate      func()
+	onUpdate      func(*Client)
+	onConnect     func(*Client)
+	onDisconnect  func(*Client)
 
 	Clients []*Client
 
@@ -61,6 +63,10 @@ type Client struct {
 
 func (c *Client) String() string {
 	return fmt.Sprintf("Client { pid: %d }", c.pid)
+}
+
+func (c *Client) Pid() int32 {
+	return c.pid
 }
 
 type WaylandObject struct {
@@ -128,8 +134,18 @@ func (proxy *Proxy) Close() {
 	proxy.listener.Close()
 }
 
-func (proxy *Proxy) OnUpdate(onUpdate func()) {
+func (proxy *Proxy) OnUpdate(onUpdate func(*Client)) {
 	proxy.onUpdate = onUpdate
+}
+
+
+func (proxy *Proxy) OnConnect(onConnect func(*Client)) {
+	proxy.onConnect = onConnect
+}
+
+
+func (proxy *Proxy) OnDisconnect(onDisconnect func(*Client)) {
+	proxy.onDisconnect = onDisconnect
 }
 
 func (proxy *Proxy) handleClient(conn net.Conn) {
@@ -175,14 +191,14 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 
 	remote, err := net.Dial("unix", proxy.remotePath)
 	if err != nil {
-		proxy.onUpdate()
+		proxy.onUpdate(nil)
 		client.Close(err)
 		return
 	}
 
 	client.remote = remote.(*net.UnixConn)
 	client.proxy = proxy
-	proxy.onUpdate()
+	proxy.onConnect(client)
 
 	// Remote loop
 	go func() {
@@ -195,7 +211,7 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 			client.lock.Lock()
 			client.RecordRx(packet)
 			client.lock.Unlock()
-			client.proxy.onUpdate()
+			client.proxy.onUpdate(client)
 			err = packet.WritePacket(client.conn)
 			if err != nil {
 				client.Close(err)
@@ -218,7 +234,7 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 			for proxy.Block {
 				time.Sleep(500 * time.Millisecond)
 			}
-			client.proxy.onUpdate()
+			client.proxy.onUpdate(client)
 			err = packet.WritePacket(client.remote)
 			if err != nil {
 				client.Close(err)
@@ -239,7 +255,7 @@ func (client *Client) Close(err error) {
 	client.conn.Close()
 	client.remote.Close()
 	client.Timestamp = time.Now()
-	client.proxy.onUpdate()
+	client.proxy.onDisconnect(client)
 }
 
 func (client *Client) RemoveObject(objectId uint32) {
