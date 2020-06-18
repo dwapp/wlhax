@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 )
 
@@ -15,10 +16,27 @@ func (s *WlPointerSurfaceState) String() string {
 
 type WlPointer struct {
 	Object         *WaylandObject
+	Seat           *WlSeat
 	PointerSurface *WlSurface
+
+	EnteredSurface *WlSurface
+}
+
+func (r *WlPointer) RandomInfo() string {
+	if r.EnteredSurface != nil {
+		return fmt.Sprintf(", entered: %s", r.EnteredSurface.Object)
+	} else {
+		return ""
+	}
 }
 
 func (r *WlPointer) Destroy() error {
+	for idx := range r.Seat.Children {
+		if r.Seat.Children[idx].Data == r {
+			r.Seat.Children = append(r.Seat.Children[:idx], r.Seat.Children[idx+1:]...)
+			break
+		}
+	}
 	return nil
 }
 
@@ -76,15 +94,38 @@ func (r *WlPointerImpl) Request(packet *WaylandPacket) error {
 }
 
 func (r *WlPointerImpl) Event(packet *WaylandPacket) error {
+	object := r.client.ObjectMap[packet.ObjectId]
+	obj, ok := object.Data.(*WlPointer)
+	if !ok {
+		return errors.New("object is not a wl_pointer")
+	}
 	switch packet.Opcode {
 	case 0: // enter
+		_, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		sid, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		surface_obj := r.client.ObjectMap[sid]
+		if surface_obj == nil {
+			return errors.New("no such object")
+		}
+		surface, ok := surface_obj.Data.(*WlSurface)
+		if !ok {
+			return errors.New("object is not surface")
+		}
+		obj.EnteredSurface = surface
 	case 1: // leave
+		obj.EnteredSurface = nil
 	case 2: // motion
 	case 3: // button
 	case 4: // axis
 	case 5: // frame
 	case 6: // axis_source
-	case 7: // axis_stopv
+	case 7: // axis_stop
 	case 8: // axis_discrete
 	}
 	return nil

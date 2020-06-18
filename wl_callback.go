@@ -22,6 +22,10 @@ type WlCallbackImpl struct {
 	client *Client
 }
 
+func (r *WlCallbackImpl) Create() interface{} {
+	return nil
+}
+
 func RegisterWlCallback(client *Client) {
 	r := &WlCallbackImpl{
 		client: client,

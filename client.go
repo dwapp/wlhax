@@ -125,20 +125,33 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 		}
 	}
 	statusStyle = style.Reverse(false).Foreground(tcell.ColorYellow)
-	ctx.Printf(0, y, statusStyle, "Seat objects")
+	ctx.Printf(0, y, statusStyle, "Seats")
 	y++
 	for _, obj := range client.Objects {
 		if y >= ctx.Height() {
 			break
 		}
 		switch obj.Interface {
-		case "wl_seat", "wl_keyboard", "wl_pointer", "wl_touch":
+		case "wl_seat":
 			style := tcell.StyleDefault
 			if c.selected == y {
 				style = style.Reverse(true)
 			}
 			ctx.Printf(0, y, style, "    - %v", obj)
 			y++
+			seat := obj.Data.(*WlSeat)
+			for _, child := range seat.Children {
+				style := tcell.StyleDefault
+				if c.selected == y {
+					style = style.Reverse(true)
+				}
+				suffix := ""
+				if i, ok := child.Data.(interface{RandomInfo() string}); ok {
+					suffix = i.RandomInfo()
+				}
+				ctx.Printf(0, y, style, "        - %v%s", child, suffix)
+				y++
+			}
 		}
 	}
 }

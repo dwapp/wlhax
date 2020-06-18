@@ -38,8 +38,15 @@ func (r *WlRegistryImpl) Request(packet *WaylandPacket) error {
 		if err != nil {
 			return err
 		}
-		r.client.NewObject(oid, global.Interface)
-
+		obj := r.client.NewObject(oid, global.Interface)
+		if impl, ok := r.client.Impls[global.Interface]; ok {
+			creatable, ok := impl.(interface{
+				Create() Destroyable
+			})
+			if ok {
+				obj.Data = creatable.Create()
+			}
+		}
 	}
 	return nil
 }
