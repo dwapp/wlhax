@@ -19,14 +19,16 @@ type WlPointer struct {
 	PointerSurface *WlSurface
 
 	EnteredSurface *WlSurface
+	SurfaceX       float64
+	SurfaceY       float64
 }
 
 func (pointer *WlPointer) dashboardPrint(printer func(string, ...interface{}), indent int) error {
+	var surfaceObj *WaylandObject
 	if pointer.EnteredSurface != nil {
-		printer("%s - %s, entered: %s", Indent(indent), pointer.Object, pointer.EnteredSurface.Object)
-	} else {
-		printer("%s - %s", Indent(indent), pointer.Object)
+		surfaceObj = pointer.EnteredSurface.Object
 	}
+	printer("%s - %s, focus: %s, x: %.02f, y: %.02f", Indent(indent), pointer.Object, surfaceObj, pointer.SurfaceX, pointer.SurfaceY)
 	return nil
 }
 
@@ -121,6 +123,20 @@ func (r *WlPointerImpl) Event(packet *WaylandPacket) error {
 	case 1: // leave
 		obj.EnteredSurface = nil
 	case 2: // motion
+		_, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		surfaceX, err := packet.ReadFixed()
+		if err != nil {
+			return err
+		}
+		surfaceY, err := packet.ReadFixed()
+		if err != nil {
+			return err
+		}
+		obj.SurfaceX = surfaceX.ToDouble()
+		obj.SurfaceY = surfaceY.ToDouble()
 	case 3: // button
 	case 4: // axis
 	case 5: // frame

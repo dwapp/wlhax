@@ -28,11 +28,11 @@ type WlKeyboard struct {
 }
 
 func (keyboard *WlKeyboard) dashboardPrint(printer func(string, ...interface{}), indent int) error {
+	var surfaceObj *WaylandObject
 	if keyboard.EnteredSurface != nil {
-		printer("%s - %s, keys held: %d, entered: %s", Indent(indent), keyboard.Object, keyboard.KeysHeld, keyboard.EnteredSurface.Object)
-	} else {
-		printer("%s - %s, keys held: %d,", Indent(indent), keyboard.Object, keyboard.KeysHeld)
+		surfaceObj = keyboard.EnteredSurface.Object
 	}
+	printer("%s - %s, entered: %s, keys held: %d", Indent(indent), keyboard.Object, surfaceObj, keyboard.KeysHeld)
 	return nil
 }
 

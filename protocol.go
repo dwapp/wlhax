@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"math"
 	"net"
 
 	"golang.org/x/sys/unix"
@@ -23,6 +24,19 @@ type WaylandGlobal struct {
 	Interface string
 	GlobalId  uint32
 	Version   uint32
+}
+
+type WaylandFixed int32
+
+func (f WaylandFixed) ToInt32() int32 {
+	return int32(f) / 256
+}
+
+func (f WaylandFixed) ToDouble() float64 {
+	var i int64
+	i = ((1023 + 44) << 52) + (1 << 51) + int64(f)
+	d := math.Float64frombits(uint64(i))
+	return d - (3 << 43)
 }
 
 func ReadPacket(conn *net.UnixConn) (*WaylandPacket, error) {
@@ -125,6 +139,12 @@ func (packet *WaylandPacket) ReadUint32() (uint32, error) {
 	var out uint32
 	err := binary.Read(packet.buffer, binary.LittleEndian, &out)
 	return out, err
+}
+
+func (packet *WaylandPacket) ReadFixed() (WaylandFixed, error) {
+	var out int32
+	err := binary.Read(packet.buffer, binary.LittleEndian, &out)
+	return WaylandFixed(out), err
 }
 
 func (packet *WaylandPacket) ReadString() (string, error) {

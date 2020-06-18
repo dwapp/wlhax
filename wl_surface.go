@@ -59,7 +59,7 @@ func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), 
 
 	printer("%s - %s, role: %s, buffers: %d, frames: %d/%d%s", Indent(indent), surface.Object, rolestr, surface.Current.BufferNum, surface.Frames, surface.RequestedFrames, suffix)
 	if details != "" {
-		printer("%s%s", Indent(indent+2), details)
+		printer("%s%s", Indent(indent+3), details)
 	}
 
 	for _, child := range surface.Current.Children {
