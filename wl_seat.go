@@ -1,7 +1,7 @@
 package main
 
 type WlSeat struct {
-	Object *WaylandObject
+	Object   *WaylandObject
 	Children []*WaylandObject
 }
 
@@ -14,9 +14,11 @@ func (*WlSeat) DashboardCategory() string {
 }
 
 func (seat *WlSeat) DashboardPrint(printer func(string, ...interface{})) error {
-	printer(" - %s", seat.Object)
+	printer("%s - %s", Indent(0), seat.Object)
 	for _, child := range seat.Children {
-		if i, ok := child.Data.(interface{dashboardPrint(func(string, ...interface{}), int) error}); ok {
+		if i, ok := child.Data.(interface {
+			dashboardPrint(func(string, ...interface{}), int) error
+		}); ok {
 			i.dashboardPrint(printer, 1)
 		}
 	}
