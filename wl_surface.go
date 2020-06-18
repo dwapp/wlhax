@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -22,6 +23,63 @@ type WlSurface struct {
 	Frames          uint32
 	RequestedFrames uint32
 	Current, Next   WlSurfaceState
+}
+
+func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), indent int) error {
+
+	rolestr := "<unknown>"
+	suffix := ""
+	details := ""
+
+	if surface.Current.Role != nil {
+		switch role := surface.Current.Role.(type) {
+		case WlSubSurfaceState:
+			suffix = fmt.Sprintf(", desync: %t, x: %d, y: %d", role.Desync, role.X, role.Y)
+			rolestr = role.String()
+		case WlPointerSurfaceState:
+			rolestr = role.String()
+		case XdgSurfaceState:
+			rolestr = role.String()
+			switch xdg_role := role.XdgRole.(type) {
+			case XdgToplevelState:
+				suffix = fmt.Sprintf(", app_id: %s, title: %s", xdg_role.AppId, xdg_role.Title)
+				if xdg_role.Parent != nil {
+					suffix = fmt.Sprintf("%s, parent: %s", suffix, xdg_role.Parent.Object.String())
+				}
+				if role.CurrentConfigure.Serial == role.PendingConfigure.Serial {
+					details = fmt.Sprintf("current: w=%d h=%d", role.CurrentConfigure.Width, role.CurrentConfigure.Height)
+				} else {
+					details = fmt.Sprintf("current: w=%d h=%d, pending: w=%d h=%d", role.CurrentConfigure.Width, role.CurrentConfigure.Height, role.PendingConfigure.Width, role.PendingConfigure.Height)
+				}
+			case XdgPopupState:
+				suffix = fmt.Sprintf(", parent: %s", xdg_role.XdgPopup.Parent.Object.String())
+			}
+		}
+	}
+
+	printer("%s - %s, role: %s, buffers: %d, frames: %d/%d%s", Indent(indent), surface.Object, rolestr, surface.Current.BufferNum, surface.Frames, surface.RequestedFrames, suffix)
+	if details != "" {
+		printer("%s%s", Indent(indent+2), details)
+	}
+
+	for _, child := range surface.Current.Children {
+		if err := child.Surface.dashboardOutput(printer, indent+1); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (*WlSurface) DashboardCategory() string {
+	return "Surfaces"
+}
+
+func (surface *WlSurface) DashboardShouldDisplay() bool {
+	return surface.Current.Parent == nil
+}
+
+func (surface *WlSurface) DashboardPrint(printer func(string, ...interface{})) error {
+	return surface.dashboardOutput(printer, 0)
 }
 
 func (r *WlSurface) Done() error {

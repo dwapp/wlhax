@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 )
 
 type WlKeyboardModifiers struct {
@@ -28,12 +27,13 @@ type WlKeyboard struct {
 	KeysHeld       int
 }
 
-func (r *WlKeyboard) RandomInfo() string {
-	if r.EnteredSurface != nil {
-		return fmt.Sprintf(", keys held: %d, entered: %s", r.KeysHeld, r.EnteredSurface.Object)
+func (keyboard *WlKeyboard) dashboardPrint(printer func(string, ...interface{}), indent int) error {
+	if keyboard.EnteredSurface != nil {
+		printer("%s - %s, keys held: %d, entered: %s", Indent(indent), keyboard.Object, keyboard.KeysHeld, keyboard.EnteredSurface.Object)
 	} else {
-		return fmt.Sprintf(", keys held: %d", r.KeysHeld)
+		printer("%s - %s, keys held: %d,", Indent(indent), keyboard.Object, keyboard.KeysHeld)
 	}
+	return nil
 }
 
 func (r *WlKeyboard) Destroy() error {

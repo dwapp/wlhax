@@ -84,6 +84,7 @@ func NewProxy() (*Proxy, error) {
 	proxyDisplay := "wlhax-0"
 
 	proxyPath := path.Join(xdg.RuntimeDir(), proxyDisplay)
+	os.Remove(proxyPath)
 	l, err := net.Listen("unix", proxyPath)
 	if err != nil {
 		return nil, err

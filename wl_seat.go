@@ -5,6 +5,24 @@ type WlSeat struct {
 	Children []*WaylandObject
 }
 
+func (*WlSeat) DashboardShouldDisplay() bool {
+	return true
+}
+
+func (*WlSeat) DashboardCategory() string {
+	return "Seats"
+}
+
+func (seat *WlSeat) DashboardPrint(printer func(string, ...interface{})) error {
+	printer(" - %s", seat.Object)
+	for _, child := range seat.Children {
+		if i, ok := child.Data.(interface{dashboardPrint(func(string, ...interface{}), int) error}); ok {
+			i.dashboardPrint(printer, 1)
+		}
+	}
+	return nil
+}
+
 func (r *WlSeat) Destroy() error {
 	return nil
 }
@@ -20,8 +38,10 @@ func RegisterWlSeat(client *Client) {
 	client.Impls["wl_seat"] = r
 }
 
-func (r *WlSeatImpl) Create() Destroyable {
-	return &WlSeat{}
+func (r *WlSeatImpl) Create(obj *WaylandObject) Destroyable {
+	return &WlSeat{
+		Object: obj,
+	}
 }
 
 func (r *WlSeatImpl) Request(packet *WaylandPacket) error {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"io"
 )
 
@@ -22,12 +21,13 @@ type WlPointer struct {
 	EnteredSurface *WlSurface
 }
 
-func (r *WlPointer) RandomInfo() string {
-	if r.EnteredSurface != nil {
-		return fmt.Sprintf(", entered: %s", r.EnteredSurface.Object)
+func (pointer *WlPointer) dashboardPrint(printer func(string, ...interface{}), indent int) error {
+	if pointer.EnteredSurface != nil {
+		printer("%s - %s, entered: %s", Indent(indent), pointer.Object, pointer.EnteredSurface.Object)
 	} else {
-		return ""
+		printer("%s - %s", Indent(indent), pointer.Object)
 	}
+	return nil
 }
 
 func (r *WlPointer) Destroy() error {
