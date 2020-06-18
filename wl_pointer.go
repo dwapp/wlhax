@@ -21,6 +21,7 @@ type WlPointer struct {
 	EnteredSurface *WlSurface
 	SurfaceX       float64
 	SurfaceY       float64
+	ButtonsHeld    int
 }
 
 func (pointer *WlPointer) dashboardPrint(printer func(string, ...interface{}), indent int) error {
@@ -28,7 +29,7 @@ func (pointer *WlPointer) dashboardPrint(printer func(string, ...interface{}), i
 	if pointer.EnteredSurface != nil {
 		surfaceObj = pointer.EnteredSurface.Object
 	}
-	printer("%s - %s, focus: %s, x: %.02f, y: %.02f", Indent(indent), pointer.Object, surfaceObj, pointer.SurfaceX, pointer.SurfaceY)
+	printer("%s - %s, focus: %s, x: %.02f, y: %.02f, buttons held: %d", Indent(indent), pointer.Object, surfaceObj, pointer.SurfaceX, pointer.SurfaceY, pointer.ButtonsHeld)
 	return nil
 }
 
@@ -101,9 +102,10 @@ func (r *WlPointerImpl) Event(packet *WaylandPacket) error {
 	if !ok {
 		return errors.New("object is not a wl_pointer")
 	}
+	var err error
 	switch packet.Opcode {
 	case 0: // enter
-		_, err := packet.ReadUint32()
+		_, err = packet.ReadUint32()
 		if err != nil {
 			return err
 		}
@@ -123,7 +125,7 @@ func (r *WlPointerImpl) Event(packet *WaylandPacket) error {
 	case 1: // leave
 		obj.EnteredSurface = nil
 	case 2: // motion
-		_, err := packet.ReadUint32()
+		_, err = packet.ReadUint32()
 		if err != nil {
 			return err
 		}
@@ -138,6 +140,28 @@ func (r *WlPointerImpl) Event(packet *WaylandPacket) error {
 		obj.SurfaceX = surfaceX.ToDouble()
 		obj.SurfaceY = surfaceY.ToDouble()
 	case 3: // button
+		_, err = packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		_, err = packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		_, err = packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		state, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		switch state {
+		case 0:
+			obj.ButtonsHeld -= 1
+		case 1:
+			obj.ButtonsHeld += 1
+		}
 	case 4: // axis
 	case 5: // frame
 	case 6: // axis_source

@@ -23,7 +23,6 @@ type WlKeyboard struct {
 	EnteredSurface *WlSurface
 	Modifiers      WlKeyboardModifiers
 	RepeatInfo     WlKeyboardRepeatInfo
-	KeyEvents      int
 	KeysHeld       int
 }
 
@@ -121,7 +120,6 @@ func (r *WlKeyboardImpl) Event(packet *WaylandPacket) error {
 		case 1:
 			obj.KeysHeld += 1
 		}
-		obj.KeyEvents += 1
 	case 4: // modifiers
 		_, err := packet.ReadUint32()
 		if err != nil {
