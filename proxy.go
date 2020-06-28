@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/kyoh86/xdg"
-	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
 )
 
@@ -79,20 +78,18 @@ func (wo *WaylandObject) String() string {
 	return fmt.Sprintf("%s@%d", wo.Interface, wo.ObjectId)
 }
 
-func NewProxy() (*Proxy, error) {
-	// TODO: Allow multiple wlhax servers to be running? (Who cares?)
-	proxyDisplay := "wlhax-0"
-
-	proxyPath := path.Join(xdg.RuntimeDir(), proxyDisplay)
+func NewProxy(proxyDisplay, remoteDisplay string) (*Proxy, error) {
+	var proxyPath string
+	if !path.IsAbs(proxyDisplay) {
+		proxyPath = path.Join(xdg.RuntimeDir(), proxyDisplay)
+	} else {
+		proxyPath = proxyDisplay
+	}
 	os.Remove(proxyPath)
+
 	l, err := net.Listen("unix", proxyPath)
 	if err != nil {
 		return nil, err
-	}
-
-	remoteDisplay, ok := os.LookupEnv("WAYLAND_DISPLAY")
-	if !ok {
-		return nil, errors.New("No WAYLAND_DISPLAY set, who do we proxy to?")
 	}
 
 	var remotePath string
@@ -139,11 +136,9 @@ func (proxy *Proxy) OnUpdate(onUpdate func(*Client)) {
 	proxy.onUpdate = onUpdate
 }
 
-
 func (proxy *Proxy) OnConnect(onConnect func(*Client)) {
 	proxy.onConnect = onConnect
 }
-
 
 func (proxy *Proxy) OnDisconnect(onDisconnect func(*Client)) {
 	proxy.onDisconnect = onDisconnect

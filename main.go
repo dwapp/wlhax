@@ -1,13 +1,23 @@
 package main
 
 import (
+	"os"
 	"time"
 
 	libui "git.sr.ht/~sircmpwn/aerc/lib/ui"
 )
 
 func main() {
-	proxy, err := NewProxy()
+	var proxyDisplay string
+	if len(os.Args) > 1 {
+		proxyDisplay = os.Args[1]
+	}
+	remoteDisplay, ok := os.LookupEnv("WAYLAND_DISPLAY")
+	if !ok {
+		panic("No WAYLAND_DISPLAY set")
+	}
+
+	proxy, err := NewProxy(proxyDisplay, remoteDisplay)
 	if err != nil {
 		panic(err)
 	}
