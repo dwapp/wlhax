@@ -47,9 +47,9 @@ func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), 
 					suffix = fmt.Sprintf("%s, parent: %s", suffix, xdg_role.Parent.Object.String())
 				}
 				if role.CurrentConfigure.Serial == role.PendingConfigure.Serial {
-					details = fmt.Sprintf("current: w=%d h=%d", role.CurrentConfigure.Width, role.CurrentConfigure.Height)
+					details = fmt.Sprintf("geom: x=%d y=%d w=%d h=%d, current: w=%d h=%d", role.GeometryX, role.GeometryY, role.GeometryW, role.GeometryH, role.CurrentConfigure.Width, role.CurrentConfigure.Height)
 				} else {
-					details = fmt.Sprintf("current: w=%d h=%d, pending: w=%d h=%d", role.CurrentConfigure.Width, role.CurrentConfigure.Height, role.PendingConfigure.Width, role.PendingConfigure.Height)
+					details = fmt.Sprintf("geom: x=%d y=%d w=%d h=%d, current: w=%d h=%d, pending: w=%d h=%d", role.GeometryX, role.GeometryY, role.GeometryW, role.GeometryH, role.CurrentConfigure.Width, role.CurrentConfigure.Height, role.PendingConfigure.Width, role.PendingConfigure.Height)
 				}
 			case XdgPopupState:
 				suffix = fmt.Sprintf(", parent: %s", xdg_role.XdgPopup.Parent.Object.String())
