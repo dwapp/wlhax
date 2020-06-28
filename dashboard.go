@@ -70,6 +70,7 @@ func NewDashboard(proxy *Proxy) *Dashboard {
 		v = NewClientView(c)
 		dash.tabMap[c] = v
 		tabs.Add(v, fmt.Sprintf("Client %d", c.Pid()))
+		tabs.Select(len(tabs.Tabs) - 1)
 	})
 	proxy.OnDisconnect(func(c *Client) {
 		clients.Invalidate()
