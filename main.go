@@ -11,6 +11,8 @@ func main() {
 	var proxyDisplay string
 	if len(os.Args) > 1 {
 		proxyDisplay = os.Args[1]
+	} else {
+		proxyDisplay = "wlhax-0"
 	}
 	remoteDisplay, ok := os.LookupEnv("WAYLAND_DISPLAY")
 	if !ok {
