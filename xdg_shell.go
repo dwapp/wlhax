@@ -173,6 +173,7 @@ func (r *XdgSurfaceImpl) Request(packet *WaylandPacket) error {
 		robj.GeometryY = y
 		robj.GeometryW = w
 		robj.GeometryH = h
+		xdg_surface.Surface.Next.Role = robj
 	case 4: // ack_configure
 		conf, err := packet.ReadInt32()
 		if err != nil {
