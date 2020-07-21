@@ -112,20 +112,12 @@ func (dash *Dashboard) Event(event tcell.Event) bool {
 	switch event := event.(type) {
 	case *tcell.EventKey:
 		switch event.Key() {
-		case tcell.KeyESC:
-			if dash.onExit != nil {
-				dash.onExit()
-			}
 		case tcell.KeyLeft:
 			dash.tabs.PrevTab()
 		case tcell.KeyRight:
 			dash.tabs.NextTab()
 		case tcell.KeyRune:
 			switch event.Rune() {
-			case 'q':
-				if dash.onExit != nil {
-					dash.onExit()
-				}
 			case 'h':
 				dash.tabs.PrevTab()
 			case 'l':
@@ -205,6 +197,10 @@ func (dash *Dashboard) BeginExCommand(cmd string) {
 			dash.proxy.Block = true
 		case "unblock":
 			dash.proxy.Block = false
+		case "quit", "q":
+			if dash.onExit != nil {
+				dash.onExit()
+			}
 		}
 	}, func() {
 		dash.status.Pop()
