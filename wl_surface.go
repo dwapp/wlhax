@@ -52,7 +52,10 @@ func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), 
 					details = fmt.Sprintf("geom: x=%d y=%d w=%d h=%d, current: w=%d h=%d, pending: w=%d h=%d", role.GeometryX, role.GeometryY, role.GeometryW, role.GeometryH, role.CurrentConfigure.Width, role.CurrentConfigure.Height, role.PendingConfigure.Width, role.PendingConfigure.Height)
 				}
 			case XdgPopupState:
+				p := xdg_role.XdgPopup.Positioner
 				suffix = fmt.Sprintf(", parent: %s", xdg_role.XdgPopup.Parent.Object.String())
+				details = fmt.Sprintf("positioner size: w=%d h=%d, anchor: %d, x=%d y=%d w=%d h=%d, gravity: %d, constraints: %d, offset: x=%d y=%d",
+					p.Width, p.Height, p.Anchor, p.AnchorX, p.AnchorY, p.AnchorWidth, p.AnchorHeight, p.Gravity, p.ConstraintAdjustment, p.OffsetX, p.OffsetY)
 			}
 		}
 	}

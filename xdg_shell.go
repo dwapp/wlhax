@@ -57,6 +57,15 @@ func (r *XdgWmBaseImpl) Request(packet *WaylandPacket) error {
 	switch packet.Opcode {
 	case 0: // destroy
 	case 1: // create_positioner
+		oid, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		obj := r.client.NewObject(oid, "xdg_positioner")
+		p := &XdgPositioner{
+			Object:  obj,
+		}
+		obj.Data = p
 	case 2: // get_xdg_surface
 		oid, err := packet.ReadUint32()
 		if err != nil {
@@ -135,15 +144,25 @@ func (r *XdgSurfaceImpl) Request(packet *WaylandPacket) error {
 		if err != nil {
 			return err
 		}
+		posid, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
 		parentobj, ok := r.client.ObjectMap[pid]
 		if !ok {
 			return errors.New("no such object")
 		}
 		parent := parentobj.Data.(*XdgSurface)
+		posobj, ok := r.client.ObjectMap[posid]
+		if !ok {
+			return errors.New("no such object")
+		}
+		pos := posobj.Data.(*XdgPositioner)
 		obj := r.client.NewObject(oid, "xdg_popup")
 		p := &XdgPopup{
 			Object:     obj,
 			XdgSurface: object.Data.(*XdgSurface),
+			Positioner: pos,
 			Parent:     parent,
 		}
 		obj.Data = p
@@ -200,6 +219,130 @@ func (r *XdgSurfaceImpl) Event(packet *WaylandPacket) error {
 	}
 	object.Data.(*XdgSurface).Surface.Next.Role = robj
 	return nil
+}
+
+type XdgPositioner struct {
+	Object *WaylandObject
+	Width, Height int32
+	AnchorX, AnchorY, AnchorWidth, AnchorHeight int32
+	Anchor uint32
+	Gravity uint32
+	ConstraintAdjustment uint32
+	OffsetX, OffsetY int32
+	Reactive bool
+	ParentWidth, ParentHeight int32
+	ParentConfigure uint32
+}
+
+func (t *XdgPositioner) Destroy() error {
+	return nil
+}
+
+type XdgPositionerImpl struct {
+	client *Client
+}
+
+func RegisterXdgPositioner(client *Client) {
+	r := &XdgPositionerImpl{
+		client: client,
+	}
+	client.Impls["xdg_positioner"] = r
+}
+
+func (r *XdgPositionerImpl) Request(packet *WaylandPacket) error {
+
+	// What have I done.
+	object := r.client.ObjectMap[packet.ObjectId]
+	positioner := object.Data.(*XdgPositioner)
+	switch packet.Opcode {
+	case 0: // destroy
+	case 1: // set_size
+		w, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		h, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		positioner.Width = w
+		positioner.Height = h
+	case 2: // set_anchor_rect
+		x, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		y, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		w, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		h, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		positioner.AnchorX = x
+		positioner.AnchorY = y
+		positioner.AnchorWidth = w
+		positioner.AnchorHeight = h
+	case 3: // set_anchor
+		anchor, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		positioner.Anchor = anchor
+	case 4: // set_gravity
+		gravity, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		positioner.Gravity = gravity
+	case 5: // set_constraint_adjustment
+		ca, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		positioner.ConstraintAdjustment = ca
+	case 6: // set_offset
+		x, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		y, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		positioner.OffsetX = x
+		positioner.OffsetY = y
+	case 7: // set_reactive
+		positioner.Reactive = true
+	case 8: // set_parent_size
+		w, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		h, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		positioner.ParentWidth = w
+		positioner.ParentHeight = h
+
+	case 9: // set_parent_configure
+		conf, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		positioner.ParentConfigure = conf
+	}
+	return nil
+}
+
+func (r *XdgPositionerImpl) Event(packet *WaylandPacket) error {
+	return errors.New("no events expected for XdgPositioner")
 }
 
 type XdgToplevelState struct {
@@ -320,6 +463,7 @@ type XdgPopup struct {
 	Object     *WaylandObject
 	XdgSurface *XdgSurface
 	Parent     *XdgSurface
+	Positioner *XdgPositioner
 }
 
 func (t *XdgPopup) Destroy() error {
@@ -338,9 +482,21 @@ func RegisterXdgPopup(client *Client) {
 }
 
 func (r *XdgPopupImpl) Request(packet *WaylandPacket) error {
+	switch packet.Opcode {
+	case 0: // destroy
+	case 1: // grab
+	case 2: // reposition
+	}
 	return nil
 }
 
 func (r *XdgPopupImpl) Event(packet *WaylandPacket) error {
+	switch packet.Opcode {
+	case 0: // configure
+	case 1: // popup_done
+	case 2: // repositioned
+	}
+
 	return nil
 }
+

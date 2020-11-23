@@ -183,6 +183,7 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 	RegisterWlSurface(client)
 	RegisterWlSubSurface(client)
 	RegisterXdgWmBase(client)
+	RegisterXdgPositioner(client)
 	RegisterXdgSurface(client)
 	RegisterXdgToplevel(client)
 	RegisterXdgPopup(client)
