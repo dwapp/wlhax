@@ -364,9 +364,9 @@ func (s XdgToplevelState) String() string {
 func (s XdgToplevelState) Details() []string {
 	var suffix, details string
 	if s.Parent != nil {
-		suffix = fmt.Sprintf("app_id: %s, title: %s, %s, parent: %s", s.AppId, s.Title, s.Parent.Object.String())
+		suffix = fmt.Sprintf("app_id: %s, title: %s, xdg_surface: %s, parent: %s", s.AppId, s.Title, s.XdgToplevel.XdgSurface.Object.String(), s.Parent.Object.String())
 	} else {
-		suffix = fmt.Sprintf("app_id: %s, title: %s", s.AppId, s.Title)
+		suffix = fmt.Sprintf("app_id: %s, title: %s, xdg_surface: %s", s.AppId, s.Title, s.XdgToplevel.XdgSurface.Object.String())
 	}
 
 	role := s.XdgToplevel.XdgSurface.Surface.Current.Role.(XdgSurfaceState)

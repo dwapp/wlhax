@@ -13,7 +13,7 @@ func (s WlPointerSurfaceState) String() string {
 	return s.WlPointer.Object.String()
 }
 
-func (s WlPointerSurfaceState) Details() []string {
+func (WlPointerSurfaceState) Details() []string {
 	return nil
 }
 
@@ -77,8 +77,10 @@ func (r *WlPointerImpl) Request(packet *WaylandPacket) error {
 			return err
 		}
 		if sid == 0 {
-			obj.PointerSurface.Next.Role = nil
-			obj.PointerSurface = nil
+			if obj.PointerSurface != nil {
+				obj.PointerSurface.Next.Role = nil
+				obj.PointerSurface = nil
+			}
 			return nil
 		}
 
