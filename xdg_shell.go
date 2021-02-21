@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"io"
+	"fmt"
 )
 
 // Before anyone asks about the arbitrary indexing with type asserts into deep structures:
@@ -20,17 +21,21 @@ type XdgSurfaceState struct {
 	XdgSurface                                 *XdgSurface
 	CurrentConfigure, PendingConfigure         XdgConfigure
 	GeometryX, GeometryY, GeometryW, GeometryH int32
-	XdgRole                                    interface{}
+	XdgRole                                    WlSurfaceRole
 }
 
-func (s *XdgSurfaceState) String() string {
+func (s XdgSurfaceState) String() string {
 	if s.XdgRole != nil {
-		stringer := s.XdgRole.(interface {
-			String() string
-		})
-		return stringer.String()
+		return s.XdgRole.String()
 	}
 	return s.XdgSurface.Object.String()
+}
+
+func (s XdgSurfaceState) Details() []string {
+	if s.XdgRole != nil {
+		return s.XdgRole.Details()
+	}
+	return nil
 }
 
 type XdgSurface struct {
@@ -161,7 +166,7 @@ func (r *XdgSurfaceImpl) Request(packet *WaylandPacket) error {
 		obj := r.client.NewObject(oid, "xdg_popup")
 		p := &XdgPopup{
 			Object:     obj,
-			XdgSurface: object.Data.(*XdgSurface),
+			XdgSurface: xdg_surface,
 			Positioner: pos,
 			Parent:     parent,
 		}
@@ -356,6 +361,27 @@ func (s XdgToplevelState) String() string {
 	return s.XdgToplevel.Object.String()
 }
 
+func (s XdgToplevelState) Details() []string {
+	var suffix, details string
+	if s.Parent != nil {
+		suffix = fmt.Sprintf("app_id: %s, title: %s, %s, parent: %s", s.AppId, s.Title, s.Parent.Object.String())
+	} else {
+		suffix = fmt.Sprintf("app_id: %s, title: %s", s.AppId, s.Title)
+	}
+
+	role := s.XdgToplevel.XdgSurface.Surface.Current.Role.(XdgSurfaceState)
+	if role.CurrentConfigure.Serial == role.PendingConfigure.Serial {
+		details = fmt.Sprintf("geom: x=%d y=%d w=%d h=%d, current: w=%d h=%d", role.GeometryX, role.GeometryY, role.GeometryW, role.GeometryH, role.CurrentConfigure.Width, role.CurrentConfigure.Height)
+	} else {
+		details = fmt.Sprintf("geom: x=%d y=%d w=%d h=%d, current: w=%d h=%d, pending: w=%d h=%d", role.GeometryX, role.GeometryY, role.GeometryW, role.GeometryH, role.CurrentConfigure.Width, role.CurrentConfigure.Height, role.PendingConfigure.Width, role.PendingConfigure.Height)
+	}
+
+	return []string{
+		suffix,
+		details,
+	}
+}
+
 type XdgToplevel struct {
 	Object     *WaylandObject
 	XdgSurface *XdgSurface
@@ -457,6 +483,17 @@ type XdgPopupState struct {
 
 func (s XdgPopupState) String() string {
 	return s.XdgPopup.Object.String()
+}
+
+func (s XdgPopupState) Details() []string {
+	p := s.XdgPopup.Positioner
+	return []string{
+		fmt.Sprintf("parent: %s", s.XdgPopup.Parent.Object.String()),
+		fmt.Sprintf("positioner size: w=%d h=%d, anchor: %d, x=%d y=%d w=%d h=%d",
+			p.Width, p.Height, p.Anchor, p.AnchorX, p.AnchorY, p.AnchorWidth, p.AnchorHeight),
+		fmt.Sprintf("positioner gravity: %d, constraints: %d, offset: x=%d y=%d",
+			p.Gravity, p.ConstraintAdjustment, p.OffsetX, p.OffsetY),
+	}
 }
 
 type XdgPopup struct {

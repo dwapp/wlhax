@@ -2,9 +2,13 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"time"
 )
+
+type WlSurfaceRole interface {
+	String() string
+	Details() []string
+}
 
 type WlSurfaceState struct {
 	Buffer                             uint32
@@ -15,7 +19,7 @@ type WlSurfaceState struct {
 	Transform                          int32
 	Parent                             *WlSurface
 	Children                           []*WlSubSurface
-	Role                               interface{}
+	Role                               WlSurfaceRole
 }
 
 type WlSurface struct {
@@ -28,41 +32,16 @@ type WlSurface struct {
 func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), indent int) error {
 
 	rolestr := "<unknown>"
-	suffix := ""
-	details := ""
+	var details []string
 
 	if surface.Current.Role != nil {
-		switch role := surface.Current.Role.(type) {
-		case WlSubSurfaceState:
-			suffix = fmt.Sprintf(", desync: %t, x: %d, y: %d", role.Desync, role.X, role.Y)
-			rolestr = role.String()
-		case WlPointerSurfaceState:
-			rolestr = role.String()
-		case XdgSurfaceState:
-			rolestr = role.String()
-			switch xdg_role := role.XdgRole.(type) {
-			case XdgToplevelState:
-				suffix = fmt.Sprintf(", app_id: %s, title: %s", xdg_role.AppId, xdg_role.Title)
-				if xdg_role.Parent != nil {
-					suffix = fmt.Sprintf("%s, parent: %s", suffix, xdg_role.Parent.Object.String())
-				}
-				if role.CurrentConfigure.Serial == role.PendingConfigure.Serial {
-					details = fmt.Sprintf("geom: x=%d y=%d w=%d h=%d, current: w=%d h=%d", role.GeometryX, role.GeometryY, role.GeometryW, role.GeometryH, role.CurrentConfigure.Width, role.CurrentConfigure.Height)
-				} else {
-					details = fmt.Sprintf("geom: x=%d y=%d w=%d h=%d, current: w=%d h=%d, pending: w=%d h=%d", role.GeometryX, role.GeometryY, role.GeometryW, role.GeometryH, role.CurrentConfigure.Width, role.CurrentConfigure.Height, role.PendingConfigure.Width, role.PendingConfigure.Height)
-				}
-			case XdgPopupState:
-				p := xdg_role.XdgPopup.Positioner
-				suffix = fmt.Sprintf(", parent: %s", xdg_role.XdgPopup.Parent.Object.String())
-				details = fmt.Sprintf("positioner size: w=%d h=%d, anchor: %d, x=%d y=%d w=%d h=%d, gravity: %d, constraints: %d, offset: x=%d y=%d",
-					p.Width, p.Height, p.Anchor, p.AnchorX, p.AnchorY, p.AnchorWidth, p.AnchorHeight, p.Gravity, p.ConstraintAdjustment, p.OffsetX, p.OffsetY)
-			}
-		}
+		rolestr = surface.Current.Role.String()
+		details = surface.Current.Role.Details()
 	}
 
-	printer("%s - %s, role: %s, buffers: %d, frames: %d/%d%s", Indent(indent), surface.Object, rolestr, surface.Current.BufferNum, surface.Frames, surface.RequestedFrames, suffix)
-	if details != "" {
-		printer("%s%s", Indent(indent+3), details)
+	printer("%s - %s, role: %s, buffers: %d, frames: %d/%d", Indent(indent), surface.Object, rolestr, surface.Current.BufferNum, surface.Frames, surface.RequestedFrames)
+	for _, d := range details {
+		printer("%s%s", Indent(indent+3), d)
 	}
 
 	for _, child := range surface.Current.Children {

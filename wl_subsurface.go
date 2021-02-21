@@ -11,8 +11,14 @@ type WlSubSurfaceState struct {
 	Desync     bool
 }
 
-func (s *WlSubSurfaceState) String() string {
+func (s WlSubSurfaceState) String() string {
 	return s.SubSurface.String()
+}
+
+func (s WlSubSurfaceState) Details() []string {
+	return []string{
+		fmt.Sprintf("desync: %t, x: %d, y: %d", s.Desync, s.X, s.Y),
+	}
 }
 
 type WlSubSurface struct {

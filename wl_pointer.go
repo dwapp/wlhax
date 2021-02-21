@@ -9,8 +9,12 @@ type WlPointerSurfaceState struct {
 	WlPointer *WlPointer
 }
 
-func (s *WlPointerSurfaceState) String() string {
+func (s WlPointerSurfaceState) String() string {
 	return s.WlPointer.Object.String()
+}
+
+func (s WlPointerSurfaceState) Details() []string {
+	return nil
 }
 
 type WlPointer struct {
