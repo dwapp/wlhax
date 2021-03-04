@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"fmt"
+	"strings"
 )
 
 // Before anyone asks about the arbitrary indexing with type asserts into deep structures:
@@ -11,10 +12,47 @@ import (
 //   Yes, I know. I regret everything.
 //
 
+type EnumXdgState int32
+
+const (
+	EnumXdgStateMaximized EnumXdgState = iota + 1
+	EnumXdgStateFullscreen
+	EnumXdgStateResizing
+	EnumXdgStateActivated
+	EnumXdgStateTiledLeft
+	EnumXdgStateTiledRight
+	EnumXdgStateTiledTop
+	EnumXdgStateTiledBottom
+)
+
+func (e EnumXdgState) String() string {
+	switch e {
+	case EnumXdgStateMaximized:
+		return "maximized"
+	case EnumXdgStateFullscreen:
+		return "fullscreen"
+	case EnumXdgStateResizing:
+		return "resizing"
+	case EnumXdgStateActivated:
+		return "activated"
+	case EnumXdgStateTiledLeft:
+		return "tiled-left"
+	case EnumXdgStateTiledRight:
+		return "tiled-right"
+	case EnumXdgStateTiledTop:
+		return "tiled-top"
+	case EnumXdgStateTiledBottom:
+		return "tiled-bottom"
+	default:
+		return "unknown"
+	}
+}
+
 type XdgConfigure struct {
 	Serial int32
 	Width  int32
 	Height int32
+	States []EnumXdgState
 }
 
 type XdgSurfaceState struct {
@@ -362,24 +400,34 @@ func (s XdgToplevelState) String() string {
 }
 
 func (s XdgToplevelState) Details() []string {
-	var suffix, details string
+	var suffix string
 	if s.Parent != nil {
 		suffix = fmt.Sprintf("app_id: %s, title: %s, xdg_surface: %s, parent: %s", s.AppId, s.Title, s.XdgToplevel.XdgSurface.Object.String(), s.Parent.Object.String())
 	} else {
 		suffix = fmt.Sprintf("app_id: %s, title: %s, xdg_surface: %s", s.AppId, s.Title, s.XdgToplevel.XdgSurface.Object.String())
 	}
 
-	role := s.XdgToplevel.XdgSurface.Surface.Current.Role.(XdgSurfaceState)
-	if role.CurrentConfigure.Serial == role.PendingConfigure.Serial {
-		details = fmt.Sprintf("geom: x=%d y=%d w=%d h=%d, current: w=%d h=%d", role.GeometryX, role.GeometryY, role.GeometryW, role.GeometryH, role.CurrentConfigure.Width, role.CurrentConfigure.Height)
-	} else {
-		details = fmt.Sprintf("geom: x=%d y=%d w=%d h=%d, current: w=%d h=%d, pending: w=%d h=%d", role.GeometryX, role.GeometryY, role.GeometryW, role.GeometryH, role.CurrentConfigure.Width, role.CurrentConfigure.Height, role.PendingConfigure.Width, role.PendingConfigure.Height)
+	details := []string{
+		suffix,
 	}
 
-	return []string{
-		suffix,
-		details,
+	role := s.XdgToplevel.XdgSurface.Surface.Current.Role.(XdgSurfaceState)
+	details = append(details, fmt.Sprintf("geom: x=%d y=%d w=%d h=%d, current: w=%d h=%d", role.GeometryX, role.GeometryY, role.GeometryW, role.GeometryH, role.CurrentConfigure.Width, role.CurrentConfigure.Height))
+	var states []string
+	for _, state := range role.CurrentConfigure.States {
+		states = append(states, state.String())
 	}
+	details = append(details, fmt.Sprintf("current states: %s", strings.Join(states, ", ")))
+	if role.CurrentConfigure.Serial != role.PendingConfigure.Serial {
+		details = append(details, fmt.Sprintf("pending: w=%d h=%d, ", role.PendingConfigure.Width, role.PendingConfigure.Height))
+		var states []string
+		for _, state := range role.PendingConfigure.States {
+			states = append(states, state.String())
+		}
+		details = append(details, fmt.Sprintf("pending states: %s", strings.Join(states, ", ")))
+	}
+
+	return details
 }
 
 type XdgToplevel struct {
@@ -469,8 +517,26 @@ func (r *XdgToplevelImpl) Event(packet *WaylandPacket) error {
 		if err != nil && err != io.EOF {
 			return err
 		}
+		l, err := packet.ReadInt32()
+		if err != nil && err != io.EOF {
+			return err
+		}
+		var states []EnumXdgState
+		for idx := int32(0); idx < l; idx++ {
+			state, err := packet.ReadInt32()
+			if err != nil {
+				if err == io.EOF {
+					break
+				} else {
+					return err
+				}
+			}
+			states = append(states, EnumXdgState(state))
+		}
+
 		xdgstate.PendingConfigure.Width = width
 		xdgstate.PendingConfigure.Height = height
+		xdgstate.PendingConfigure.States = states
 		xdg_surface.Surface.Next.Role = xdgstate
 	case 1: // close
 	}
