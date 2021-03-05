@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"time"
+	"strings"
 )
 
 type WlSurfaceRole interface {
@@ -27,6 +28,7 @@ type WlSurface struct {
 	Frames          uint32
 	RequestedFrames uint32
 	Current, Next   WlSurfaceState
+	Outputs         []*WaylandObject
 }
 
 func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), indent int) error {
@@ -39,7 +41,17 @@ func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), 
 		details = surface.Current.Role.Details()
 	}
 
-	printer("%s - %s, role: %s, buffers: %d, frames: %d/%d", Indent(indent), surface.Object, rolestr, surface.Current.BufferNum, surface.Frames, surface.RequestedFrames)
+	printer("%s - %s, role: %s", Indent(indent), surface.Object, rolestr)
+	printer("%sbuffers: %d, frames: %d/%d", Indent(indent+3), surface.Current.BufferNum, surface.Frames, surface.RequestedFrames)
+
+
+	if len(surface.Outputs) > 0 {
+		var x []string
+		for _, obj := range surface.Outputs {
+			x = append(x, obj.String())
+		}
+		printer("%soutputs: %s", Indent(indent+3), strings.Join(x, ", "))
+	}
 	for _, d := range details {
 		printer("%s%s", Indent(indent+3), d)
 	}
@@ -201,5 +213,33 @@ func (r *WlSurfaceImpl) Request(packet *WaylandPacket) error {
 }
 
 func (r *WlSurfaceImpl) Event(packet *WaylandPacket) error {
+	object := r.client.ObjectMap[packet.ObjectId]
+	obj, ok := object.Data.(*WlSurface)
+	if !ok {
+		return errors.New("object is not wl_surface")
+	}
+	switch packet.Opcode {
+	case 0: // enter
+		sid, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		output_obj := r.client.ObjectMap[sid]
+		if output_obj == nil {
+			return errors.New("no such object")
+		}
+		obj.Outputs = append(obj.Outputs, output_obj)
+	case 1: // leave
+		sid, err := packet.ReadUint32()
+		if err != nil {
+			return err
+		}
+		for idx := 0; idx < len(obj.Outputs); idx++ {
+			if obj.Outputs[idx].ObjectId == sid {
+				obj.Outputs = append(obj.Outputs[:idx], obj.Outputs[idx+1:]...)
+				idx--
+			}
+		}
+	}
 	return nil
 }

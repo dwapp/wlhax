@@ -173,6 +173,7 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 
 	RegisterWlDisplay(client)
 	RegisterWlRegistry(client)
+	RegisterWlOutput(client)
 	RegisterWlCallback(client)
 	RegisterWlSeat(client)
 	RegisterWlKeyboard(client)
