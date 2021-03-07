@@ -130,6 +130,7 @@ func (r *WlPointerImpl) Event(packet *WaylandPacket) error {
 		obj.EnteredSurface = surface
 	case 1: // leave
 		obj.EnteredSurface = nil
+		obj.ButtonsHeld = 0
 	case 2: // motion
 		_, err = packet.ReadUint32()
 		if err != nil {

@@ -97,6 +97,7 @@ func (r *WlKeyboardImpl) Event(packet *WaylandPacket) error {
 		obj.EnteredSurface = surface
 	case 2: // leave
 		obj.EnteredSurface = nil
+		obj.KeysHeld = 0
 	case 3: // key
 		_, err = packet.ReadUint32()
 		if err != nil {
