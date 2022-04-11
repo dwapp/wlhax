@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 	"strings"
+	"os"
+	"fmt"
 )
 
 type WlSurfaceRole interface {
@@ -12,7 +14,7 @@ type WlSurfaceRole interface {
 }
 
 type WlSurfaceState struct {
-	Buffer                             uint32
+	Buffer                             *WaylandObject
 	BufferNum                          int
 	BufferX, BufferY                   int32
 	DamageX, DamageY, DamageW, DamageH int32
@@ -29,6 +31,7 @@ type WlSurface struct {
 	RequestedFrames uint32
 	Current, Next   WlSurfaceState
 	Outputs         []*WaylandObject
+	Buffers         []*WaylandObject
 }
 
 func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), indent int) error {
@@ -42,8 +45,17 @@ func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), 
 	}
 
 	printer("%s - %s, role: %s", Indent(indent), surface.Object, rolestr)
-	printer("%sbuffers: %d, frames: %d/%d", Indent(indent+3), surface.Current.BufferNum, surface.Frames, surface.RequestedFrames)
-
+	if len(surface.Buffers) > 0 {
+		var x []string
+		for _, obj := range surface.Buffers {
+			x = append(x, obj.String())
+		}
+		printer("%sbuffers: %s, total: %d", Indent(indent+3), strings.Join(x, ", "), surface.Current.BufferNum)
+	}
+	if surface.Current.Buffer != nil {
+		printer("%sactive buffer: %s", Indent(indent+3), surface.Current.Buffer)
+	}
+	printer("%sframes: %d/%d", Indent(indent+3), surface.Frames, surface.RequestedFrames)
 
 	if len(surface.Outputs) > 0 {
 		var x []string
@@ -93,6 +105,35 @@ func (r *WlSurface) Destroy() error {
 	return nil
 }
 
+type WlSurfaceBufferSubscriber struct {
+	surface *WlSurface
+	buf     *WaylandObject
+}
+
+func (s *WlSurfaceBufferSubscriber) Object() *WaylandObject {
+	fmt.Fprintf(os.Stderr, "obj: %p\n", s.surface)
+	fmt.Fprintf(os.Stderr, "obj: %p\n", s.surface.Object)
+	return s.surface.Object
+}
+
+func (s *WlSurfaceBufferSubscriber) Destroy() {
+	for idx := range s.surface.Buffers {
+		if s.surface.Buffers[idx] == s.buf {
+			s.surface.Buffers = append(s.surface.Buffers[:idx], s.surface.Buffers[idx+1:]...)
+			break
+		}
+	}
+}
+
+func (s *WlSurfaceBufferSubscriber) Release() {
+	for idx := range s.surface.Buffers {
+		if s.surface.Buffers[idx] == s.buf {
+			s.surface.Buffers = append(s.surface.Buffers[:idx], s.surface.Buffers[idx+1:]...)
+			break
+		}
+	}
+}
+
 type WlSurfaceImpl struct {
 	client *Client
 }
@@ -113,7 +154,7 @@ func (r *WlSurfaceImpl) Request(packet *WaylandPacket) error {
 	switch packet.Opcode {
 	case 0: // destroy
 	case 1: // attach
-		buffer, err := packet.ReadUint32()
+		bid, err := packet.ReadUint32()
 		if err != nil {
 			return err
 		}
@@ -128,7 +169,28 @@ func (r *WlSurfaceImpl) Request(packet *WaylandPacket) error {
 		obj.Next.BufferNum = obj.Current.BufferNum + 1
 		obj.Next.BufferX = x
 		obj.Next.BufferY = y
-		obj.Next.Buffer = buffer
+
+		buffer_obj := r.client.ObjectMap[bid]
+		if buffer_obj == nil {
+			return errors.New("no such buffer object")
+		}
+		obj.Next.Buffer = buffer_obj
+		buffer, ok := buffer_obj.Data.(*WlBuffer)
+		if !ok {
+			return errors.New("object is not buffer")
+		}
+		buffer.Subscriber = &WlSurfaceBufferSubscriber{
+			surface: obj,
+			buf:     buffer_obj,
+		}
+		buffer.Attached = true
+		for idx := range obj.Buffers {
+			if obj.Buffers[idx] == buffer_obj {
+				obj.Buffers = append(obj.Buffers[:idx], obj.Buffers[idx+1:]...)
+				break
+			}
+		}
+		obj.Buffers = append(obj.Buffers, buffer_obj)
 	case 2: // damage
 		x, err := packet.ReadInt32()
 		if err != nil {
@@ -168,6 +230,13 @@ func (r *WlSurfaceImpl) Request(packet *WaylandPacket) error {
 	case 6: // commit
 		// TODO: maybe we're messing up the children slice when we do things like this
 		obj.Current = obj.Next
+		if obj.Current.Buffer != nil {
+			buffer, ok := obj.Current.Buffer.Data.(*WlBuffer)
+			if !ok {
+				return errors.New("attached buffer is not a buffer")
+			}
+			buffer.Committed = true
+		}
 		if r.client.proxy.SlowMode {
 			time.Sleep(250 * time.Millisecond)
 		}
@@ -226,7 +295,7 @@ func (r *WlSurfaceImpl) Event(packet *WaylandPacket) error {
 		}
 		output_obj := r.client.ObjectMap[sid]
 		if output_obj == nil {
-			return errors.New("no such object")
+			return errors.New("no such output object")
 		}
 		obj.Outputs = append(obj.Outputs, output_obj)
 	case 1: // leave

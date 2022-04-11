@@ -75,6 +75,9 @@ type WaylandObject struct {
 }
 
 func (wo *WaylandObject) String() string {
+	if wo == nil {
+		return "<nil object>"
+	}
 	return fmt.Sprintf("%s@%d", wo.Interface, wo.ObjectId)
 }
 
@@ -174,6 +177,9 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 	RegisterWlDisplay(client)
 	RegisterWlRegistry(client)
 	RegisterWlOutput(client)
+	RegisterWlBuffer(client)
+	RegisterWlShm(client)
+	RegisterWlShmPool(client)
 	RegisterWlCallback(client)
 	RegisterWlSeat(client)
 	RegisterWlKeyboard(client)
@@ -188,6 +194,8 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 	RegisterXdgSurface(client)
 	RegisterXdgToplevel(client)
 	RegisterXdgPopup(client)
+	RegisterZwpLinuxDmabuf(client)
+	RegisterZwpLinuxBufferParams(client)
 
 	remote, err := net.Dial("unix", proxy.remotePath)
 	if err != nil {
@@ -205,6 +213,7 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 		for {
 			packet, err := ReadPacket(client.remote)
 			if err != nil {
+				fmt.Fprintf(os.Stderr, "read failed: %s\n", err)
 				client.Close(err)
 				return
 			}
@@ -214,6 +223,7 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 			client.proxy.onUpdate(client)
 			err = packet.WritePacket(client.conn)
 			if err != nil {
+				fmt.Fprintf(os.Stderr, "write failed: %s\n", err)
 				client.Close(err)
 				return
 			}
@@ -225,6 +235,7 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 		for {
 			packet, err := ReadPacket(client.conn)
 			if err != nil {
+				fmt.Fprintf(os.Stderr, "read failed: %s\n", err)
 				client.Close(err)
 				return
 			}
@@ -237,6 +248,7 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 			client.proxy.onUpdate(client)
 			err = packet.WritePacket(client.remote)
 			if err != nil {
+				fmt.Fprintf(os.Stderr, "write failed: %s\n", err)
 				client.Close(err)
 				return
 			}
@@ -293,6 +305,7 @@ func (client *Client) RecordRx(packet *WaylandPacket) {
 	} else {
 		if impl, ok := client.Impls[object.Interface]; ok {
 			if err := impl.Event(packet); err != nil {
+				fmt.Fprintf(os.Stderr, "event failed for %s: %s\n", object, err)
 				client.Close(err)
 			}
 		}
@@ -308,6 +321,7 @@ func (client *Client) RecordTx(packet *WaylandPacket) {
 	} else {
 		if impl, ok := client.Impls[object.Interface]; ok {
 			if err := impl.Request(packet); err != nil {
+				fmt.Fprintf(os.Stderr, "request failed for %s: %s\n", object, err)
 				client.Close(err)
 			}
 		}
