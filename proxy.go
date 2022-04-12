@@ -196,6 +196,8 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 	RegisterXdgPopup(client)
 	RegisterZwpLinuxDmabuf(client)
 	RegisterZwpLinuxBufferParams(client)
+	RegisterWpViewporter(client)
+	RegisterWpViewport(client)
 
 	remote, err := net.Dial("unix", proxy.remotePath)
 	if err != nil {
