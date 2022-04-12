@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 	"strings"
-	"os"
 	"fmt"
 )
 
@@ -52,10 +51,20 @@ func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), 
 		}
 		printer("%sbuffers: %s, total: %d", Indent(indent+3), strings.Join(x, ", "), surface.Current.BufferNum)
 	}
+
+	var bufferStr []string
 	if surface.Current.Buffer != nil {
-		printer("%sactive buffer: %s", Indent(indent+3), surface.Current.Buffer)
+		bufferStr = append(bufferStr, fmt.Sprintf("active buffer: %s",surface.Current.Buffer))
 	}
-	printer("%sframes: %d/%d", Indent(indent+3), surface.Frames, surface.RequestedFrames)
+	if surface.Current.Scale != 0 {
+		bufferStr = append(bufferStr, fmt.Sprintf("scale: %d", surface.Current.Scale))
+	}
+	if surface.RequestedFrames > 0 {
+		bufferStr = append(bufferStr, fmt.Sprintf("frames: %d/%d", surface.Frames, surface.RequestedFrames))
+	}
+	if len(bufferStr) > 0 {
+		printer("%s%s", Indent(indent+3), strings.Join(bufferStr, ", "))
+	}
 
 	if len(surface.Outputs) > 0 {
 		var x []string
@@ -111,8 +120,6 @@ type WlSurfaceBufferSubscriber struct {
 }
 
 func (s *WlSurfaceBufferSubscriber) Object() *WaylandObject {
-	fmt.Fprintf(os.Stderr, "obj: %p\n", s.surface)
-	fmt.Fprintf(os.Stderr, "obj: %p\n", s.surface.Object)
 	return s.surface.Object
 }
 

@@ -396,7 +396,7 @@ type XdgToplevelState struct {
 }
 
 func (s XdgToplevelState) String() string {
-	return s.XdgToplevel.Object.String()
+	return fmt.Sprintf("%s of %s", s.XdgToplevel.Object, s.XdgToplevel.XdgSurface.Object)
 }
 
 func (s XdgToplevelState) Details() []string {
@@ -404,9 +404,7 @@ func (s XdgToplevelState) Details() []string {
 		fmt.Sprintf("app_id: %s, title: %s", s.AppId, s.Title),
 	}
 	if s.Parent != nil {
-		details = append(details, fmt.Sprintf("xdg_surface: %s, parent: %s", s.XdgToplevel.XdgSurface.Object.String(), s.Parent.Object.String()))
-	} else {
-		details = append(details, fmt.Sprintf("xdg_surface: %s", s.XdgToplevel.XdgSurface.Object.String()))
+		details = append(details, fmt.Sprintf("parent: %s", s.Parent.Object.String()))
 	}
 
 	role := s.XdgToplevel.XdgSurface.Surface.Current.Role.(XdgSurfaceState)
@@ -546,7 +544,7 @@ type XdgPopupState struct {
 }
 
 func (s XdgPopupState) String() string {
-	return s.XdgPopup.Object.String()
+	return fmt.Sprintf("%s of %s", s.XdgPopup.Object, s.XdgPopup.XdgSurface.Object)
 }
 
 func (s XdgPopupState) Details() []string {
