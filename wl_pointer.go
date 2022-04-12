@@ -33,7 +33,7 @@ func (pointer *WlPointer) dashboardPrint(printer func(string, ...interface{}), i
 	if pointer.EnteredSurface != nil {
 		surfaceObj = pointer.EnteredSurface.Object
 	}
-	printer("%s - %s, focus: %s, x: %.02f, y: %.02f, buttons held: %d", Indent(indent), pointer.Object, surfaceObj, pointer.SurfaceX, pointer.SurfaceY, pointer.ButtonsHeld)
+	printer("%s - %s, entered: %s, x: %.02f, y: %.02f, buttons held: %d", Indent(indent), pointer.Object, surfaceObj, pointer.SurfaceX, pointer.SurfaceY, pointer.ButtonsHeld)
 	return nil
 }
 
