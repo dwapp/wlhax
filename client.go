@@ -10,13 +10,16 @@ import (
 
 type ClientView struct {
 	libui.Invalidatable
-	selected int
-	client   *Client
+	selected        int
+	currentCategory string
+	client          *Client
+	folded          map[string]bool
 }
 
 func NewClientView(client *Client) *ClientView {
 	return &ClientView{
 		client: client,
+		folded: make(map[string]bool),
 	}
 }
 
@@ -52,9 +55,6 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 	}
 	printer := func(formatter string, v ...interface{}) {
 		style := tcell.StyleDefault
-		if c.selected == y {
-			style = style.Reverse(true)
-		}
 		printerWithStyle(style, formatter, v...)
 	}
 
@@ -92,11 +92,16 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 		}
 		sorted[category] = append(arr, displayable)
 	}
-
 	sort.Sort(sort.StringSlice(categories))
+	c.currentCategory = ""
 	for _, category := range categories {
+		if y == c.selected {
+			c.currentCategory = category
+		}
 		printerWithStyle(tcell.StyleDefault.Foreground(tcell.ColorYellow), category)
-
+		if c.folded[category] {
+			continue
+		}
 		children := sorted[category]
 		for _, child := range children {
 			child.DashboardPrint(printer)
@@ -122,6 +127,15 @@ func (client *ClientView) SelectPrev() {
 	client.Invalidate()
 }
 
+func (client *ClientView) Toggle() {
+	if client.currentCategory == "" {
+		return
+	}
+	client.folded[client.currentCategory] = !client.folded[client.currentCategory]
+	client.Invalidate()
+}
+
+
 func (client *ClientView) Focus(focus bool) {
 	// This space deliberately left blank
 }
@@ -145,6 +159,11 @@ func (client *ClientView) Event(event tcell.Event) bool {
 				client.SelectPrev()
 				return true
 			}
+		}
+		switch event.Rune() {
+		case ' ':
+			client.Toggle()
+			return true
 		}
 	}
 	return false
