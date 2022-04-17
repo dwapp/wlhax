@@ -13,6 +13,9 @@ type ClientView struct {
 	selected        int
 	currentCategory string
 	client          *Client
+	viewportHeight	int
+	currentLines    int
+	scroll          int
 	folded          map[string]bool
 }
 
@@ -38,19 +41,21 @@ type DashboardDisplayable interface {
 }
 
 func (c *ClientView) Draw(ctx *libui.Context) {
+	c.viewportHeight = ctx.Height()
 	ctx.Fill(0, 0, ctx.Width(), ctx.Height(), ' ', tcell.StyleDefault)
 
 	y := 0
 
 	printerWithStyle := func(style tcell.Style, formatter string, v ...interface{}) {
-		if y >= ctx.Height() {
+		if y < c.scroll || y - c.scroll >= ctx.Height() {
+			y++
 			return
 		}
 		if c.selected == y {
 			style = style.Reverse(true)
 		}
-		w := ctx.Printf(0, y, style, formatter, v...)
-		ctx.Fill(w, y, ctx.Width()-w, 1, ' ', style)
+		w := ctx.Printf(0, y - c.scroll, style, formatter, v...)
+		ctx.Fill(w, y - c.scroll, ctx.Width()-w, 1, ' ', style)
 		y++
 	}
 	printer := func(formatter string, v ...interface{}) {
@@ -107,22 +112,31 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 			child.DashboardPrint(printer)
 		}
 	}
+	c.currentLines = y
 }
 
 func (client *ClientView) Invalidate() {
 	client.DoInvalidate(client)
 }
 
-// TODO: Scrolling
-func (client *ClientView) SelectNext() {
-	client.selected += 1
+func (client *ClientView) SelectNext(inc int) {
+	client.selected += inc
+	if client.selected >= client.currentLines {
+		client.selected = client.currentLines - 1
+	}
+	if client.selected >= client.scroll + client.viewportHeight {
+		client.scroll = client.selected - client.viewportHeight + 1
+	}
 	client.Invalidate()
 }
 
-func (client *ClientView) SelectPrev() {
-	client.selected -= 1
+func (client *ClientView) SelectPrev(inc int) {
+	client.selected -= inc
 	if client.selected < 0 {
 		client.selected = 0
+	}
+	if client.selected < client.scroll {
+		client.scroll = client.selected
 	}
 	client.Invalidate()
 }
@@ -145,18 +159,24 @@ func (client *ClientView) Event(event tcell.Event) bool {
 	case *tcell.EventKey:
 		switch event.Key() {
 		case tcell.KeyDown:
-			client.SelectNext()
+			client.SelectNext(1)
 			return true
 		case tcell.KeyUp:
-			client.SelectPrev()
+			client.SelectPrev(1)
+			return true
+		case tcell.KeyPgDn:
+			client.SelectNext(client.viewportHeight)
+			return true
+		case tcell.KeyPgUp:
+			client.SelectPrev(client.viewportHeight)
 			return true
 		case tcell.KeyRune:
 			switch event.Rune() {
 			case 'j':
-				client.SelectNext()
+				client.SelectNext(1)
 				return true
 			case 'k':
-				client.SelectPrev()
+				client.SelectPrev(1)
 				return true
 			}
 		}
