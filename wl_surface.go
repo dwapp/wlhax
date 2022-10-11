@@ -177,6 +177,11 @@ func (r *WlSurfaceImpl) Request(packet *WaylandPacket) error {
 		obj.Next.BufferX = x
 		obj.Next.BufferY = y
 
+		if bid == 0 {
+			obj.Next.Role = nil
+			return nil
+		}
+
 		buffer_obj := r.client.ObjectMap[bid]
 		if buffer_obj == nil {
 			return errors.New("no such buffer object")
