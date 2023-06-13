@@ -178,7 +178,7 @@ func (r *WlSurfaceImpl) Request(packet *WaylandPacket) error {
 		obj.Next.BufferY = y
 
 		if bid == 0 {
-			obj.Next.Role = nil
+			obj.Next.Buffer = nil
 			return nil
 		}
 
