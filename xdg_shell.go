@@ -23,6 +23,7 @@ const (
 	EnumXdgStateTiledRight
 	EnumXdgStateTiledTop
 	EnumXdgStateTiledBottom
+	EnumXdgStateSuspended
 )
 
 func (e EnumXdgState) String() string {
@@ -43,6 +44,8 @@ func (e EnumXdgState) String() string {
 		return "tiled-top"
 	case EnumXdgStateTiledBottom:
 		return "tiled-bottom"
+	case EnumXdgStateSuspended:
+		return "suspended"
 	default:
 		return "unknown"
 	}
@@ -535,6 +538,8 @@ func (r *XdgToplevelImpl) Event(packet *WaylandPacket) error {
 		xdgstate.PendingConfigure.States = states
 		xdg_surface.Surface.Next.Role = xdgstate
 	case 1: // close
+	case 2: // configure_bounds
+	case 3: // wm_capabilities
 	}
 	return nil
 }
