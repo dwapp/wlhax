@@ -167,7 +167,14 @@ func (dash *Dashboard) focus(item libui.Interactive) {
 func (dash *Dashboard) BeginExCommand(cmd string) {
 	previous := dash.focused
 	exline := NewExLine(cmd, func(cmd string) {
-		parts, _ := shlex.Split(cmd)
+		if len(cmd) == 0 {
+			return
+		}
+		parts, err := shlex.Split(cmd)
+		if err != nil {
+			return
+		}
+
 		switch parts[0] {
 		case "exec":
 			if len(parts) < 2 {
