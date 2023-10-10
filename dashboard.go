@@ -197,6 +197,8 @@ func (dash *Dashboard) BeginExCommand(cmd string) {
 			dash.proxy.Block = true
 		case "unblock":
 			dash.proxy.Block = false
+		case "closewrite":
+			dash.proxy.CloseWrite()
 		case "quit", "q":
 			if dash.onExit != nil {
 				dash.onExit()

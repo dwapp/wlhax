@@ -123,6 +123,12 @@ func (proxy *Proxy) Run() {
 	}
 }
 
+func (proxy *Proxy) CloseWrite() {
+	for _, client := range proxy.Clients {
+		client.conn.CloseWrite()
+	}
+}
+
 func (proxy *Proxy) ProxyDisplay() string {
 	return proxy.proxyDisplay
 }
