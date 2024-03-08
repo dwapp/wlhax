@@ -25,12 +25,14 @@ type WlSurfaceState struct {
 }
 
 type WlSurface struct {
-	Object          *WaylandObject
-	Frames          uint32
-	RequestedFrames uint32
-	Current, Next   WlSurfaceState
-	Outputs         []*WaylandObject
-	Buffers         []*WaylandObject
+	Object                   *WaylandObject
+	Frames                   uint32
+	RequestedFrames          uint32
+	PreferredBufferScale     int32
+	PreferredBufferTransform int32
+	Current, Next            WlSurfaceState
+	Outputs                  []*WaylandObject
+	Buffers                  []*WaylandObject
 }
 
 func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), indent int) error {
@@ -72,6 +74,9 @@ func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), 
 			x = append(x, obj.String())
 		}
 		printer("%soutputs: %s", Indent(indent+3), strings.Join(x, ", "))
+	}
+	if surface.PreferredBufferScale != 0 || surface.PreferredBufferTransform != 0 {
+		printer("%spreferred scale: %d, preferred transform: %d", Indent(indent+3), surface.PreferredBufferScale, surface.PreferredBufferTransform)
 	}
 	for _, d := range details {
 		printer("%s%s", Indent(indent+3), d)
@@ -289,6 +294,17 @@ func (r *WlSurfaceImpl) Request(packet *WaylandPacket) error {
 		obj.Next.DamageY = y * scale
 		obj.Next.DamageW = w * scale
 		obj.Next.DamageH = h * scale
+	case 10: // offset
+		x, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		y, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		obj.Next.BufferX = x
+		obj.Next.BufferY = y
 	}
 	return nil
 }
@@ -321,6 +337,18 @@ func (r *WlSurfaceImpl) Event(packet *WaylandPacket) error {
 				idx--
 			}
 		}
+	case 2: // preferred_buffer_scale
+		scale, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		obj.PreferredBufferScale = scale
+	case 3: // preferred_buffer_transform
+		transform, err := packet.ReadInt32()
+		if err != nil {
+			return err
+		}
+		obj.PreferredBufferTransform = transform
 	}
 	return nil
 }
