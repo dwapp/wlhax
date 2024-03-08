@@ -1,7 +1,12 @@
 package main
 
+import (
+	"fmt"
+)
+
 type WlOutput struct {
 	Object *WaylandObject
+	Name   string
 }
 
 func (*WlOutput) DashboardShouldDisplay() bool {
@@ -13,7 +18,11 @@ func (*WlOutput) DashboardCategory() string {
 }
 
 func (output *WlOutput) DashboardPrint(printer func(string, ...interface{})) error {
-	printer("%s - %s", Indent(0), output.Object)
+	s := output.Object.String()
+	if output.Name != "" {
+		s += fmt.Sprintf(" %q", output.Name)
+	}
+	printer("%s - %s", Indent(0), s)
 	return nil
 }
 
@@ -46,11 +55,20 @@ func (r *WlOutputImpl) Request(packet *WaylandPacket) error {
 }
 
 func (r *WlOutputImpl) Event(packet *WaylandPacket) error {
+	object := r.client.ObjectMap[packet.ObjectId]
+	output := object.Data.(*WlOutput)
 	switch packet.Opcode {
 	case 0: // geometry
 	case 1: // mode
 	case 2: // done
 	case 3: // scale
+	case 4: // name
+		name, err := packet.ReadString()
+		if err != nil {
+			return err
+		}
+		output.Name = name
+	case 5: // description
 	}
 	return nil
 }
