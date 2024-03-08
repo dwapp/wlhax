@@ -1,7 +1,12 @@
 package main
 
+import (
+	"fmt"
+)
+
 type WlSeat struct {
 	Object   *WaylandObject
+	Name     string
 	Children []*WaylandObject
 }
 
@@ -14,7 +19,11 @@ func (*WlSeat) DashboardCategory() string {
 }
 
 func (seat *WlSeat) DashboardPrint(printer func(string, ...interface{})) error {
-	printer("%s - %s", Indent(0), seat.Object)
+	s := seat.Object.String()
+	if seat.Name != "" {
+		s += fmt.Sprintf(" %q", seat.Name)
+	}
+	printer("%s - %s", Indent(0), s)
 	for _, child := range seat.Children {
 		if i, ok := child.Data.(interface {
 			dashboardPrint(func(string, ...interface{}), int) error
@@ -89,9 +98,16 @@ func (r *WlSeatImpl) Request(packet *WaylandPacket) error {
 }
 
 func (r *WlSeatImpl) Event(packet *WaylandPacket) error {
+	object := r.client.ObjectMap[packet.ObjectId]
+	seat := object.Data.(*WlSeat)
 	switch packet.Opcode {
 	case 0: // capabilities
 	case 1: // name
+		name, err := packet.ReadString()
+		if err != nil {
+			return err
+		}
+		seat.Name = name
 	}
 	return nil
 }
