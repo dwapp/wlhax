@@ -15,7 +15,7 @@ func (*WlShmPool) Destroy() error {
 
 type WlShmBuffer struct {
 	Offset, Width, Height, Stride int32
-	Format uint32
+	Format                        uint32
 }
 
 func (b *WlShmBuffer) String() string {
@@ -64,13 +64,13 @@ func (r *WlShmPoolImpl) Request(packet *WaylandPacket) error {
 		obj := r.client.NewObject(oid, "wl_buffer")
 		b := &WlShmBuffer{
 			Offset: offset,
-			Width: width,
+			Width:  width,
 			Height: height,
 			Stride: stride,
 			Format: format,
 		}
 		obj.Data = &WlBuffer{
-			Object: obj,
+			Object:     obj,
 			BufferType: b,
 		}
 	case 1: // destroy
@@ -82,7 +82,6 @@ func (r *WlShmPoolImpl) Request(packet *WaylandPacket) error {
 func (r *WlShmPoolImpl) Event(packet *WaylandPacket) error {
 	return errors.New("wl_shm_pool has no events")
 }
-
 
 type WlShm struct {
 	Origin      *WaylandObject
@@ -125,5 +124,3 @@ func (r *WlShmImpl) Event(packet *WaylandPacket) error {
 	}
 	return nil
 }
-
-

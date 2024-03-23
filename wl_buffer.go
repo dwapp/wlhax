@@ -15,11 +15,11 @@ type BufferSubscriber interface {
 }
 
 type WlBuffer struct {
-	Object      *WaylandObject
-	Subscriber  BufferSubscriber
-	BufferType  WlBufferType
-	Attached    bool
-	Committed   bool
+	Object     *WaylandObject
+	Subscriber BufferSubscriber
+	BufferType WlBufferType
+	Attached   bool
+	Committed  bool
 }
 
 func (*WlBuffer) DashboardShouldDisplay() bool {

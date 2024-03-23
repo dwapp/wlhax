@@ -63,10 +63,10 @@ func (r *ZwpLinuxBufferParamsImpl) Request(packet *WaylandPacket) error {
 			return err
 		}
 		data.Creating = &ZwpLinuxDmabufBuffer{
-			Width: width,
+			Width:  width,
 			Height: height,
 			Format: format,
-			Flags: flags,
+			Flags:  flags,
 		}
 
 	case 3: // create_immed
@@ -91,15 +91,15 @@ func (r *ZwpLinuxBufferParamsImpl) Request(packet *WaylandPacket) error {
 			return err
 		}
 		data.Creating = &ZwpLinuxDmabufBuffer{
-			Width: width,
+			Width:  width,
 			Height: height,
 			Format: format,
-			Flags: flags,
+			Flags:  flags,
 		}
 		obj := r.client.NewObject(oid, "wl_buffer")
 
 		obj.Data = &WlBuffer{
-			Object: obj,
+			Object:     obj,
 			BufferType: data.Creating,
 		}
 	}
@@ -121,7 +121,7 @@ func (r *ZwpLinuxBufferParamsImpl) Event(packet *WaylandPacket) error {
 		}
 		obj := r.client.NewObject(oid, "wl_buffer")
 		obj.Data = &WlBuffer{
-			Object: obj,
+			Object:     obj,
 			BufferType: data.Creating,
 		}
 	case 1: // failed
@@ -173,4 +173,3 @@ func (r *ZwpLinuxDmabufImpl) Event(packet *WaylandPacket) error {
 	}
 	return nil
 }
-

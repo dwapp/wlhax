@@ -7,11 +7,11 @@ import (
 )
 
 type WpViewport struct {
-	Object *WaylandObject
-	Surface *WaylandObject
+	Object                                      *WaylandObject
+	Surface                                     *WaylandObject
 	SourceX, SourceY, SourceWidth, SourceHeight WaylandFixed
-	DestWidth, DestHeight int32
-	SourceSet, DestSet bool
+	DestWidth, DestHeight                       int32
+	SourceSet, DestSet                          bool
 }
 
 func (w *WpViewport) Destroy() error {
@@ -141,7 +141,7 @@ func (w *WpViewporterImpl) Request(packet *WaylandPacket) error {
 		}
 		obj := w.client.NewObject(oid, "wp_viewport")
 		obj.Data = &WpViewport{
-			Object: obj,
+			Object:  obj,
 			Surface: sobj,
 		}
 	}
@@ -151,4 +151,3 @@ func (w *WpViewporterImpl) Request(packet *WaylandPacket) error {
 func (w *WpViewporterImpl) Event(packet *WaylandPacket) error {
 	return errors.New("wp_viewporter has no events")
 }
-

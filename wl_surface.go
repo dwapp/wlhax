@@ -2,9 +2,9 @@ package main
 
 import (
 	"errors"
-	"time"
-	"strings"
 	"fmt"
+	"strings"
+	"time"
 )
 
 type WlSurfaceRole interface {
@@ -56,7 +56,7 @@ func (surface *WlSurface) dashboardOutput(printer func(string, ...interface{}), 
 
 	var bufferStr []string
 	if surface.Current.Buffer != nil {
-		bufferStr = append(bufferStr, fmt.Sprintf("active buffer: %s",surface.Current.Buffer))
+		bufferStr = append(bufferStr, fmt.Sprintf("active buffer: %s", surface.Current.Buffer))
 	}
 	if surface.Current.Scale != 0 {
 		bufferStr = append(bufferStr, fmt.Sprintf("scale: %d", surface.Current.Scale))

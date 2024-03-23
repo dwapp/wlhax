@@ -38,7 +38,7 @@ func (r *WlRegistryImpl) Request(packet *WaylandPacket) error {
 		}
 		obj := r.client.NewObject(oid, global.Interface)
 		if impl, ok := r.client.Impls[global.Interface]; ok {
-			creatable, ok := impl.(interface{
+			creatable, ok := impl.(interface {
 				Create(*WaylandObject) Destroyable
 			})
 			if ok {

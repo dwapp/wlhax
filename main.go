@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
-	"time"
-	"os/exec"
 	"fmt"
+	"os"
+	"os/exec"
+	"time"
 
 	libui "git.sr.ht/~sircmpwn/aerc/lib/ui"
 )
@@ -16,8 +16,8 @@ func main() {
 	}
 
 	var (
-		err error
-		path string
+		err   error
+		path  string
 		proxy *Proxy
 	)
 	for idx := 0; idx < 10; idx++ {

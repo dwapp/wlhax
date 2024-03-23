@@ -2,8 +2,8 @@ package main
 
 import (
 	"errors"
-	"io"
 	"fmt"
+	"io"
 	"strings"
 )
 
@@ -109,7 +109,7 @@ func (r *XdgWmBaseImpl) Request(packet *WaylandPacket) error {
 		}
 		obj := r.client.NewObject(oid, "xdg_positioner")
 		p := &XdgPositioner{
-			Object:  obj,
+			Object: obj,
 		}
 		obj.Data = p
 	case 2: // get_xdg_surface
@@ -268,16 +268,16 @@ func (r *XdgSurfaceImpl) Event(packet *WaylandPacket) error {
 }
 
 type XdgPositioner struct {
-	Object *WaylandObject
-	Width, Height int32
+	Object                                      *WaylandObject
+	Width, Height                               int32
 	AnchorX, AnchorY, AnchorWidth, AnchorHeight int32
-	Anchor uint32
-	Gravity uint32
-	ConstraintAdjustment uint32
-	OffsetX, OffsetY int32
-	Reactive bool
-	ParentWidth, ParentHeight int32
-	ParentConfigure uint32
+	Anchor                                      uint32
+	Gravity                                     uint32
+	ConstraintAdjustment                        uint32
+	OffsetX, OffsetY                            int32
+	Reactive                                    bool
+	ParentWidth, ParentHeight                   int32
+	ParentConfigure                             uint32
 }
 
 func (t *XdgPositioner) Destroy() error {
@@ -603,4 +603,3 @@ func (r *XdgPopupImpl) Event(packet *WaylandPacket) error {
 
 	return nil
 }
-

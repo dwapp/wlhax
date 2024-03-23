@@ -17,8 +17,8 @@ type WlKeyboardRepeatInfo struct {
 }
 
 type WlKeyboard struct {
-	Object         *WaylandObject
-	Seat           *WlSeat
+	Object *WaylandObject
+	Seat   *WlSeat
 
 	EnteredSurface *WlSurface
 	Modifiers      WlKeyboardModifiers

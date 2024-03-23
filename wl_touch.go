@@ -5,8 +5,8 @@ import (
 )
 
 type WlTouch struct {
-	Object         *WaylandObject
-	Seat           *WlSeat
+	Object *WaylandObject
+	Seat   *WlSeat
 }
 
 func (r *WlTouch) Destroy() error {

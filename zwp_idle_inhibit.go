@@ -87,7 +87,7 @@ func (w *WpIdleInhibitManagerImpl) Request(packet *WaylandPacket) error {
 		}
 		obj := w.client.NewObject(oid, "zwp_idle_inhibitor_v1")
 		obj.Data = &WpIdleInhibitor{
-			Object: obj,
+			Object:  obj,
 			Surface: sobj,
 		}
 	}
@@ -97,4 +97,3 @@ func (w *WpIdleInhibitManagerImpl) Request(packet *WaylandPacket) error {
 func (w *WpIdleInhibitManagerImpl) Event(packet *WaylandPacket) error {
 	return errors.New("zwp_idle_inhibit_manager_v1 has no events")
 }
-

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"strings"
 	"sort"
+	"strings"
 
 	libui "git.sr.ht/~sircmpwn/aerc/lib/ui"
 	"github.com/gdamore/tcell"
@@ -13,7 +13,7 @@ type ClientView struct {
 	selected        int
 	currentCategory string
 	client          *Client
-	viewportHeight	int
+	viewportHeight  int
 	currentLines    int
 	scroll          int
 	folded          map[string]bool
@@ -47,15 +47,15 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 	y := 0
 
 	printerWithStyle := func(style tcell.Style, formatter string, v ...interface{}) {
-		if y < c.scroll || y - c.scroll >= ctx.Height() {
+		if y < c.scroll || y-c.scroll >= ctx.Height() {
 			y++
 			return
 		}
 		if c.selected == y {
 			style = style.Reverse(true)
 		}
-		w := ctx.Printf(0, y - c.scroll, style, formatter, v...)
-		ctx.Fill(w, y - c.scroll, ctx.Width()-w, 1, ' ', style)
+		w := ctx.Printf(0, y-c.scroll, style, formatter, v...)
+		ctx.Fill(w, y-c.scroll, ctx.Width()-w, 1, ' ', style)
 		y++
 	}
 	printer := func(formatter string, v ...interface{}) {
@@ -124,7 +124,7 @@ func (client *ClientView) SelectNext(inc int) {
 	if client.selected >= client.currentLines {
 		client.selected = client.currentLines - 1
 	}
-	if client.selected >= client.scroll + client.viewportHeight {
+	if client.selected >= client.scroll+client.viewportHeight {
 		client.scroll = client.selected - client.viewportHeight + 1
 	}
 	client.Invalidate()
@@ -148,7 +148,6 @@ func (client *ClientView) Toggle() {
 	client.folded[client.currentCategory] = !client.folded[client.currentCategory]
 	client.Invalidate()
 }
-
 
 func (client *ClientView) Focus(focus bool) {
 	// This space deliberately left blank

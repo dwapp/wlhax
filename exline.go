@@ -8,9 +8,9 @@ import (
 
 type ExLine struct {
 	ui.Invalidatable
-	commit      func(cmd string)
-	finish      func()
-	input       *ui.TextInput
+	commit func(cmd string)
+	finish func()
+	input  *ui.TextInput
 }
 
 func NewExLine(cmd string, commit func(cmd string),
@@ -18,9 +18,9 @@ func NewExLine(cmd string, commit func(cmd string),
 
 	input := ui.NewTextInput("").Prompt(":").Set(cmd)
 	exline := &ExLine{
-		commit:      commit,
-		finish:      finish,
-		input:       input,
+		commit: commit,
+		finish: finish,
+		input:  input,
 	}
 	input.OnInvalidate(func(d ui.Drawable) {
 		exline.Invalidate()
@@ -32,8 +32,8 @@ func NewPrompt(prompt string, commit func(text string)) *ExLine {
 
 	input := ui.NewTextInput("").Prompt(prompt)
 	exline := &ExLine{
-		commit:      commit,
-		input:       input,
+		commit: commit,
+		input:  input,
 	}
 	input.OnInvalidate(func(d ui.Drawable) {
 		exline.Invalidate()

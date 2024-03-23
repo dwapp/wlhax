@@ -106,7 +106,7 @@ func (w *WpFractionalScaleManagerImpl) Request(packet *WaylandPacket) error {
 		}
 		obj := w.client.NewObject(oid, "wp_fractional_scale_v1")
 		obj.Data = &WpFractionalScale{
-			Object: obj,
+			Object:  obj,
 			Surface: sobj,
 		}
 	}
@@ -119,4 +119,3 @@ func (w *WpFractionalScaleManagerImpl) Event(packet *WaylandPacket) error {
 	}
 	return nil
 }
-
