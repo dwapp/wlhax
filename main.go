@@ -4,11 +4,10 @@ import (
 	"os"
 	"time"
 	"os/exec"
+	"fmt"
 
 	libui "git.sr.ht/~sircmpwn/aerc/lib/ui"
 )
-
-const proxyDisplay = "wlhax-0"
 
 func main() {
 	remoteDisplay, ok := os.LookupEnv("WAYLAND_DISPLAY")
@@ -16,10 +15,21 @@ func main() {
 		panic("No WAYLAND_DISPLAY set")
 	}
 
-	proxy, err := NewProxy(proxyDisplay, remoteDisplay)
+	var (
+		err error
+		path string
+		proxy *Proxy
+	)
+	for idx := 0; idx < 10; idx++ {
+		path = fmt.Sprintf("wlhax-%d", idx)
+		if proxy, err = NewProxy(path, remoteDisplay); err == nil {
+			break
+		}
+	}
 	if err != nil {
 		panic(err)
 	}
+	defer os.Remove(path)
 	go proxy.Run()
 	defer proxy.Close()
 

@@ -88,7 +88,6 @@ func NewProxy(proxyDisplay, remoteDisplay string) (*Proxy, error) {
 	} else {
 		proxyPath = proxyDisplay
 	}
-	os.Remove(proxyPath)
 
 	l, err := net.Listen("unix", proxyPath)
 	if err != nil {
