@@ -201,6 +201,7 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 	RegisterXdgPopup(client)
 	RegisterZwpLinuxDmabuf(client)
 	RegisterZwpLinuxBufferParams(client)
+	RegisterWpSinglePixelBufferManager(client)
 	RegisterWpViewporter(client)
 	RegisterWpViewport(client)
 	RegisterWpFractionalScaleManager(client)
