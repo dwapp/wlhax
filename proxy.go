@@ -205,6 +205,8 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 	RegisterWpViewport(client)
 	RegisterWpFractionalScaleManager(client)
 	RegisterWpFractionalScale(client)
+	RegisterWpIdleInhibitManager(client)
+	RegisterWpIdleInhibitor(client)
 
 	remote, err := net.Dial("unix", proxy.remotePath)
 	if err != nil {
