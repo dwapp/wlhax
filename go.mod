@@ -4,12 +4,14 @@ go 1.13
 
 require (
 	git.sr.ht/~sircmpwn/aerc v0.0.0-20191204144953-eef662c60677
-	github.com/ftrvxmtrx/fd v0.0.0-20150925145434-c6d800382fff
-	github.com/gdamore/tcell v1.1.5-0.20190724020331-84b54971b46c
-	github.com/google/shlex v0.0.0-20181106134648-c34317bd91bf
-	github.com/kyoh86/xdg v1.0.0
-	github.com/pkg/errors v0.8.1
-	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a
+	github.com/gdamore/encoding v1.0.1 // indirect
+	github.com/gdamore/tcell v1.4.0
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+	github.com/kyoh86/xdg v1.2.0
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
+	github.com/mattn/go-runewidth v0.0.16 // indirect
+	github.com/pkg/errors v0.9.1
+	github.com/rivo/uniseg v0.4.7 // indirect
+	golang.org/x/sys v0.28.0
+	golang.org/x/text v0.21.0 // indirect
 )
-
-replace github.com/gdamore/tcell => git.sr.ht/~sircmpwn/tcell v0.0.0-20190807054800-3fdb6bc01a50
