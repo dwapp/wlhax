@@ -1,13 +1,12 @@
 package main
 
 import (
-	"github.com/gdamore/tcell"
-
-	"git.sr.ht/~sircmpwn/aerc/lib/ui"
+	config "git.sr.ht/~rjarry/aerc/config"
+	"git.sr.ht/~rjarry/aerc/lib/ui"
+	"git.sr.ht/~rockorager/vaxis"
 )
 
 type ExLine struct {
-	ui.Invalidatable
 	commit func(cmd string)
 	finish func()
 	input  *ui.TextInput
@@ -16,33 +15,36 @@ type ExLine struct {
 func NewExLine(cmd string, commit func(cmd string),
 	finish func()) *ExLine {
 
-	input := ui.NewTextInput("").Prompt(":").Set(cmd)
+	input := ui.NewTextInput("", config.Ui).Prompt(":").Set(cmd)
 	exline := &ExLine{
 		commit: commit,
 		finish: finish,
 		input:  input,
 	}
+	/*
 	input.OnInvalidate(func(d ui.Drawable) {
-		exline.Invalidate()
-	})
+		ui.Invalidate()
+	})*/
 	return exline
 }
 
 func NewPrompt(prompt string, commit func(text string)) *ExLine {
 
-	input := ui.NewTextInput("").Prompt(prompt)
+	input := ui.NewTextInput("", config.Ui).Prompt(prompt)
 	exline := &ExLine{
 		commit: commit,
 		input:  input,
 	}
+	/*
 	input.OnInvalidate(func(d ui.Drawable) {
 		exline.Invalidate()
 	})
+	*/
 	return exline
 }
 
 func (ex *ExLine) Invalidate() {
-	ex.DoInvalidate(ex)
+	//ex.DoInvalidate(ex)
 }
 
 func (ex *ExLine) Draw(ctx *ui.Context) {
@@ -53,16 +55,15 @@ func (ex *ExLine) Focus(focus bool) {
 	ex.input.Focus(focus)
 }
 
-func (ex *ExLine) Event(event tcell.Event) bool {
-	switch event := event.(type) {
-	case *tcell.EventKey:
-		switch event.Key() {
-		case tcell.KeyEnter, tcell.KeyCtrlJ:
+func (ex *ExLine) Event(event vaxis.Event) bool {
+	if key, ok := event.(vaxis.Key); ok {
+		switch {
+		case key.Matches(vaxis.KeyEnter), key.Matches('j', vaxis.ModCtrl):
 			cmd := ex.input.String()
 			ex.input.Focus(false)
 			ex.commit(cmd)
 			ex.finish()
-		case tcell.KeyEsc, tcell.KeyCtrlC:
+		case key.Matches(vaxis.KeyEsc), key.Matches('c', vaxis.ModCtrl):
 			ex.input.Focus(false)
 			ex.finish()
 		default:

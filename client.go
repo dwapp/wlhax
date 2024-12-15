@@ -4,12 +4,12 @@ import (
 	"sort"
 	"strings"
 
-	libui "git.sr.ht/~sircmpwn/aerc/lib/ui"
-	"github.com/gdamore/tcell"
+	"git.sr.ht/~rjarry/aerc/lib/ui"
+	libui "git.sr.ht/~rjarry/aerc/lib/ui"
+	"git.sr.ht/~rockorager/vaxis"
 )
 
 type ClientView struct {
-	libui.Invalidatable
 	selected        int
 	currentCategory string
 	client          *Client
@@ -42,24 +42,24 @@ type DashboardDisplayable interface {
 
 func (c *ClientView) Draw(ctx *libui.Context) {
 	c.viewportHeight = ctx.Height()
-	ctx.Fill(0, 0, ctx.Width(), ctx.Height(), ' ', tcell.StyleDefault)
+	ctx.Fill(0, 0, ctx.Width(), ctx.Height(), ' ', vaxis.Style{})
 
 	y := 0
 
-	printerWithStyle := func(style tcell.Style, formatter string, v ...interface{}) {
+	printerWithStyle := func(style vaxis.Style, formatter string, v ...interface{}) {
 		if y < c.scroll || y-c.scroll >= ctx.Height() {
 			y++
 			return
 		}
 		if c.selected == y {
-			style = style.Reverse(true)
+			// style = style.Reverse(true)
 		}
 		w := ctx.Printf(0, y-c.scroll, style, formatter, v...)
 		ctx.Fill(w, y-c.scroll, ctx.Width()-w, 1, ' ', style)
 		y++
 	}
 	printer := func(formatter string, v ...interface{}) {
-		style := tcell.StyleDefault
+		style := vaxis.Style{}
 		printerWithStyle(style, formatter, v...)
 	}
 
@@ -70,10 +70,10 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 		status = client.Err.Error()
 	}
 
-	style := tcell.StyleDefault
-	statusStyle := style.Foreground(tcell.ColorGreen)
+	style := vaxis.Style{}
+	statusStyle := style //style.Foreground(tcell.ColorGreen)
 	if client.Err != nil {
-		statusStyle = statusStyle.Foreground(tcell.ColorRed)
+		//statusStyle = statusStyle.Foreground(tcell.ColorRed)
 	}
 	printerWithStyle(statusStyle, "%s  since %s  rx: %-6d tx: %-6d globals: %-4d objects: %-4d",
 		status, client.Timestamp.Format("15:04:05"), len(client.RxLog), len(client.TxLog),
@@ -103,7 +103,7 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 		if y == c.selected {
 			c.currentCategory = category
 		}
-		printerWithStyle(tcell.StyleDefault.Foreground(tcell.ColorYellow), category)
+		printerWithStyle(/*tcell.StyleDefault.Foreground(tcell.ColorYellow),*/vaxis.Style{}, category)
 		if c.folded[category] {
 			continue
 		}
@@ -116,7 +116,8 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 }
 
 func (client *ClientView) Invalidate() {
-	client.DoInvalidate(client)
+	// client.DoInvalidate(client)
+	ui.Invalidate()
 }
 
 func (client *ClientView) SelectNext(inc int) {
@@ -153,34 +154,28 @@ func (client *ClientView) Focus(focus bool) {
 	// This space deliberately left blank
 }
 
-func (client *ClientView) Event(event tcell.Event) bool {
-	switch event := event.(type) {
-	case *tcell.EventKey:
-		switch event.Key() {
-		case tcell.KeyDown:
+func (client *ClientView) Event(event vaxis.Event) bool {
+	if key, ok := event.(vaxis.Key); ok {
+		switch {
+		case key.Matches(vaxis.KeyDown):
 			client.SelectNext(1)
 			return true
-		case tcell.KeyUp:
+		case key.Matches(vaxis.KeyUp):
 			client.SelectPrev(1)
 			return true
-		case tcell.KeyPgDn:
+		case key.Matches(vaxis.KeyPgDown):
 			client.SelectNext(client.viewportHeight)
 			return true
-		case tcell.KeyPgUp:
+		case key.Matches(vaxis.KeyPgUp):
 			client.SelectPrev(client.viewportHeight)
 			return true
-		case tcell.KeyRune:
-			switch event.Rune() {
-			case 'j':
-				client.SelectNext(1)
-				return true
-			case 'k':
-				client.SelectPrev(1)
-				return true
-			}
-		}
-		switch event.Rune() {
-		case ' ':
+		case key.Matches('j'):
+			client.SelectNext(1)
+			return true
+		case key.Matches('k'):
+			client.SelectPrev(1)
+			return true
+		case key.Matches(' '):
 			client.Toggle()
 			return true
 		}
