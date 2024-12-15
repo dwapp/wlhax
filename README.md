@@ -1,5 +1,7 @@
 # wlhax
 
+> Note: I forked this project for personal use, and may add non-standard protocol support in the future. The original project was https://git.sr.ht/~kennylevinsen/wlhax.
+
 Fork of https://git.sr.ht/~sircmpwn/wlhax
 
 Wayland proxy that monitors and displays various application state, such as the current surface tree, in a nice little TUI.
