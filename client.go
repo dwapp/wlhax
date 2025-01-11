@@ -51,7 +51,7 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 			return
 		}
 		if c.selected == y {
-			// style = style.Reverse(true)
+			style.Attribute = vaxis.AttrReverse
 		}
 		w := ctx.Printf(0, y-c.scroll, style, formatter, v...)
 		ctx.Fill(w, y-c.scroll, ctx.Width()-w, 1, ' ', style)
@@ -103,7 +103,8 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 		if y == c.selected {
 			c.currentCategory = category
 		}
-		printerWithStyle(/*tcell.StyleDefault.Foreground(tcell.ColorYellow),*/vaxis.Style{}, category)
+		printerWithStyle(vaxis.Style { Foreground: vaxis.IndexColor(226) }, category)
+
 		if c.folded[category] {
 			continue
 		}
