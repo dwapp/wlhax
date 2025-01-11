@@ -4,7 +4,6 @@ import (
 	"sort"
 	"strings"
 
-	"git.sr.ht/~rjarry/aerc/lib/ui"
 	libui "git.sr.ht/~rjarry/aerc/lib/ui"
 	"git.sr.ht/~rockorager/vaxis"
 )
@@ -70,10 +69,11 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 		status = client.Err.Error()
 	}
 
-	style := vaxis.Style{}
-	statusStyle := style //style.Foreground(tcell.ColorGreen)
+	statusStyle := vaxis.Style {
+		Foreground: vaxis.RGBColor(0, 255, 0),
+	}
 	if client.Err != nil {
-		//statusStyle = statusStyle.Foreground(tcell.ColorRed)
+		statusStyle.Foreground = vaxis.RGBColor(255, 0, 0)
 	}
 	printerWithStyle(statusStyle, "%s  since %s  rx: %-6d tx: %-6d globals: %-4d objects: %-4d",
 		status, client.Timestamp.Format("15:04:05"), len(client.RxLog), len(client.TxLog),
@@ -116,8 +116,7 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 }
 
 func (client *ClientView) Invalidate() {
-	// client.DoInvalidate(client)
-	ui.Invalidate()
+	libui.Invalidate()
 }
 
 func (client *ClientView) SelectNext(inc int) {

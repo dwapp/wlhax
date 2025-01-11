@@ -34,8 +34,7 @@ func NewDashboard(proxy *Proxy) *Dashboard {
 	status.Push(libui.NewText(
 		fmt.Sprintf("WAYLAND_DISPLAY=%s -> %s",
 			proxy.ProxyDisplay(), proxy.RemoteDisplay()),
-		config.Ui.GetStyle(config.STYLE_DEFAULT)))
-	/*.Reverse(true))*/
+		config.Ui.GetStyle(config.STYLE_SUCCESS)))
 
 	grid := libui.NewGrid().Rows([]libui.GridSpec{
 		{Strategy: libui.SIZE_EXACT, Size: libui.Const(1)},
@@ -45,7 +44,7 @@ func NewDashboard(proxy *Proxy) *Dashboard {
 		{Strategy: libui.SIZE_EXACT, Size: libui.Const(11)},
 		{Strategy: libui.SIZE_WEIGHT, Size: libui.Const(1)},
 	})
-	grid.AddChild(libui.NewText("   wlhax   ", config.Ui.GetStyle(config.STYLE_HEADER))) //.Reverse(true))
+	grid.AddChild(libui.NewText("   wlhax   ", config.Ui.GetStyle(config.STYLE_HEADER)))
 	grid.AddChild(tabs.TabStrip).At(0, 1)
 	grid.AddChild(tabs.TabContent).At(1, 0).Span(1, 2)
 	grid.AddChild(status).At(2, 0).Span(1, 2)
@@ -76,7 +75,6 @@ func NewDashboard(proxy *Proxy) *Dashboard {
 		v = NewClientView(c)
 		dash.tabMap[c] = v
 		tabs.Add(v, fmt.Sprintf("Client %d", c.Pid()), false)
-		// tabs.Select(len(tabs.Tabs) - 1)
 	})
 	proxy.OnDisconnect(func(c *Client) {
 		clients.Invalidate()
@@ -96,6 +94,7 @@ func (dash *Dashboard) OnInvalidate(callback func(d libui.Drawable)) {
 	//dash.grid.OnInvalidate(func(d libui.Drawable) {
 	//	callback(dash)
 	//})
+	libui.Invalidate()
 }
 
 func (dash *Dashboard) Invalidate() {
@@ -108,14 +107,13 @@ func (dash *Dashboard) Event(event vaxis.Event) bool {
 			return true
 		}
 	}
-	/*
-	interactive, ok := dash.tabs.Tabs[dash.tabs.Selected].
-		Content.(libui.Interactive)
+
+	interactive, ok := dash.tabs.Selected().Content.(libui.Interactive)
 	if ok {
 		if interactive.Event(event) {
 			return true
 		}
-	}*/
+	}
 	if key, ok := event.(vaxis.Key); ok {
 		switch {
 		case key.Matches(vaxis.KeyLeft):
@@ -153,9 +151,9 @@ func (dash *Dashboard) focus(item libui.Interactive) {
 		dash.focused.Focus(false)
 	}
 	dash.focused = item
-    /*
-	interactive, ok := dash.tabs.tabs[dash.tabs.curIndex]
-		Content.(libui.Interactive)
+
+	interactive, ok := dash.tabs.Selected().Content.(libui.Interactive)
+		//tabs[dash.tabs.curIndex]
 	if item != nil {
 		item.Focus(true)
 		if ok {
@@ -165,7 +163,7 @@ func (dash *Dashboard) focus(item libui.Interactive) {
 		if ok {
 			interactive.Focus(true)
 		}
-	}*/
+	}
 }
 
 func (dash *Dashboard) BeginExCommand(cmd string) {

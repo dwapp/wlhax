@@ -50,15 +50,17 @@ func (clients *ClientsView) Draw(ctx *libui.Context) {
 		}
 		style := vaxis.Style{}
 		if clients.selected == i {
-			//	style = style.Reverse(true)
+			style.Attribute = vaxis.AttrReverse
 		}
 		w := ctx.Printf(0, y, style,
 			"Client %d: %s", client.Pid(), status)
 		ctx.Fill(w, y, ctx.Width()-w, 1, ' ', style)
 		y++
-		statusStyle := style //style.Reverse(false).Foreground(tcell.ColorGreen)
+		statusStyle := style
+		statusStyle.Attribute = vaxis.AttrNone
+		statusStyle.Foreground = vaxis.RGBColor(0, 255, 0)
 		if client.Err != nil {
-			// statusStyle = statusStyle.Foreground(tcell.ColorRed)
+			statusStyle.Foreground = vaxis.RGBColor(255, 0, 0)
 		}
 		w = ctx.Printf(0, y, statusStyle, "  since %s  ",
 			client.Timestamp.Format("15:04:05"))
@@ -72,7 +74,6 @@ func (clients *ClientsView) Draw(ctx *libui.Context) {
 }
 
 func (clients *ClientsView) Invalidate() {
-	//clients.DoInvalidate(clients)
 	libui.Invalidate()
 }
 
