@@ -58,12 +58,11 @@ loop:
 			libui.Render()
 		case <-libui.SuspendQueue:
 			err = libui.Suspend()
-				if err != nil {
-					//app.PushError(fmt.Sprintf("suspend: %s", err))
-				}
+			if err != nil {
+				panic(err)
+			}
 		case <-libui.Quit:
-			    // Do someing
-				break loop
+			break loop
 		}
 	}
 }
