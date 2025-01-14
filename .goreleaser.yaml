@@ -1,0 +1,130 @@
+# The lines below are called `modelines`. See `:help modeline`
+# Feel free to remove those if you don't want/need to use them.
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+
+archives:
+  - format: tar.gz
+    # this name template makes the OS and Arch compatible with the results of `uname`.
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    # use zip for windows archives
+    format_overrides:
+      - goos: windows
+        format: zip
+
+nfpms:
+  # note that this is an array of nfpm configs
+  - #
+    # ID of the nfpm config, must be unique.
+    id: wlhax
+    package_name: wlhax
+
+    # You can change the file name of the package.
+    # Default: '{{ .PackageName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}'.
+    file_name_template: "{{ .ConventionalFileName }}"
+
+    # Build IDs for the builds you want to create NFPM packages for.
+    builds:
+      - wlhax
+
+    vendor: dwapp.
+    homepage: https://github.com/dwapp/wlhax
+    maintainer: rewine <lhongxu@outlook.com>
+    description: |-
+      Wayland proxy that monitors and displays various application state, such as the current surface tree, in a nice little TUI.
+    license: GPL 3.0
+    formats:
+      - apk
+      - deb
+      - rpm
+      - termux.deb
+      - archlinux
+    # Umask to be used on files without explicit mode set. (overridable)
+    umask: 0o002
+    # Packages your package depends on.
+    # dependencies:
+    #  - git
+    #  - zsh
+
+    # Packages it provides.
+    provides:
+      - wlhax
+
+    # Path that the binaries should be installed.
+    bindir: /usr/bin
+
+    # Default: extracted from `version` if it is semver compatible.
+    epoch: 2
+
+    # Version Prerelease.
+    #
+    # Default: extracted from `version` if it is semver compatible.
+    prerelease: beta1
+
+    # Version Metadata (previously deb.metadata).
+    # Setting metadata might interfere with version comparisons depending on the
+    # packager.
+    #
+    # Default: extracted from `version` if it is semver compatible.
+    version_metadata: git
+
+    # Version Release.
+    release: 1
+
+    # Section.
+    section: default
+
+    # Priority.
+    priority: extra
+
+    # Makes a meta package - an empty package that contains only supporting
+    # files and dependencies.
+    # When set to `true`, the `builds` option is ignored.
+    meta: true
+
+    # Changelog YAML file, see: https://github.com/goreleaser/chglog
+    #
+    # You can use goreleaser/chglog to create the changelog for your project,
+    # pass that changelog yaml file to GoReleaser,
+    # and it should in turn setup it accordingly for the given available
+    # formats (deb and rpm at the moment).
+    #
+    # Experimental.
+    changelog: ./changelog.yml
+
+    # Custom configuration applied only to the Deb packager.
+    deb:
+      fields:
+        Bugs: https://github.com/dwapp/wlhax/issues
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+release:
+  footer: >-
+
+    ---
+
+    Released by [GoReleaser](https://github.com/goreleaser/goreleaser).
