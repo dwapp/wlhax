@@ -1,8 +1,8 @@
 package main
 
 import (
-	libui "git.sr.ht/~sircmpwn/aerc/lib/ui"
-	"github.com/gdamore/tcell"
+	libui "git.sr.ht/~rjarry/aerc/lib/ui"
+	"git.sr.ht/~rockorager/vaxis"
 )
 
 const (
@@ -20,7 +20,6 @@ Commands: exec, slow, fast, clear, block, unblock, quit
 )
 
 type ClientsView struct {
-	libui.Invalidatable
 	selected int
 	proxy    *Proxy
 }
@@ -32,11 +31,12 @@ func NewClientsView(proxy *Proxy) *ClientsView {
 }
 
 func (clients *ClientsView) Draw(ctx *libui.Context) {
-	ctx.Fill(0, 0, ctx.Width(), ctx.Height(), ' ', tcell.StyleDefault)
+
+	ctx.Fill(0, 0, ctx.Width(), ctx.Height(), ' ', vaxis.Style{})
 
 	proxy := clients.proxy
 	if len(proxy.Clients) == 0 {
-		ctx.Printf(0, 0, tcell.StyleDefault, "%s", intro)
+		ctx.Printf(0, 0, vaxis.Style{}, "%s", intro)
 		return
 	}
 
@@ -48,17 +48,19 @@ func (clients *ClientsView) Draw(ctx *libui.Context) {
 		if client.Err != nil {
 			status = client.Err.Error()
 		}
-		style := tcell.StyleDefault
+		style := vaxis.Style{}
 		if clients.selected == i {
-			style = style.Reverse(true)
+			style.Attribute = vaxis.AttrReverse
 		}
 		w := ctx.Printf(0, y, style,
 			"Client %d: %s", client.Pid(), status)
 		ctx.Fill(w, y, ctx.Width()-w, 1, ' ', style)
 		y++
-		statusStyle := style.Reverse(false).Foreground(tcell.ColorGreen)
+		statusStyle := style
+		statusStyle.Attribute = vaxis.AttrNone
+		statusStyle.Foreground = vaxis.RGBColor(0, 255, 0)
 		if client.Err != nil {
-			statusStyle = statusStyle.Foreground(tcell.ColorRed)
+			statusStyle.Foreground = vaxis.RGBColor(255, 0, 0)
 		}
 		w = ctx.Printf(0, y, statusStyle, "  since %s  ",
 			client.Timestamp.Format("15:04:05"))
@@ -72,7 +74,7 @@ func (clients *ClientsView) Draw(ctx *libui.Context) {
 }
 
 func (clients *ClientsView) Invalidate() {
-	clients.DoInvalidate(clients)
+	libui.Invalidate()
 }
 
 // TODO: Scrolling
@@ -96,25 +98,21 @@ func (clients *ClientsView) Focus(focus bool) {
 	// This space deliberately left blank
 }
 
-func (clients *ClientsView) Event(event tcell.Event) bool {
-	switch event := event.(type) {
-	case *tcell.EventKey:
-		switch event.Key() {
-		case tcell.KeyDown:
+func (clients *ClientsView) Event(event vaxis.Event) bool {
+	if key, ok := event.(vaxis.Key); ok {
+		switch {
+		case key.Matches(vaxis.KeyDown):
 			clients.SelectNext()
 			return true
-		case tcell.KeyUp:
+		case key.Matches(vaxis.KeyUp):
 			clients.SelectPrev()
 			return true
-		case tcell.KeyRune:
-			switch event.Rune() {
-			case 'j':
-				clients.SelectNext()
-				return true
-			case 'k':
-				clients.SelectPrev()
-				return true
-			}
+		case key.Matches('j'):
+			clients.SelectNext()
+			return true
+		case key.Matches('k'):
+			clients.SelectPrev()
+			return true
 		}
 	}
 	return false

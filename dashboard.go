@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"os/exec"
 
-	libui "git.sr.ht/~sircmpwn/aerc/lib/ui"
-	"github.com/gdamore/tcell"
+	libui "git.sr.ht/~rjarry/aerc/lib/ui"
+	config "git.sr.ht/~rjarry/aerc/config"
 	"github.com/google/shlex"
+	"git.sr.ht/~rockorager/vaxis"
 )
 
 type Dashboard struct {
@@ -22,24 +23,28 @@ type Dashboard struct {
 func NewDashboard(proxy *Proxy) *Dashboard {
 	clients := NewClientsView(proxy)
 
-	tabs := libui.NewTabs()
-	tabs.Add(clients, "Connections")
+	config.Ui.LoadStyle()
 
-	status := libui.NewStack()
+	tabs := libui.NewTabs(func(d libui.Drawable) *config.UIConfig {
+		return config.Ui
+	})
+	tabs.Add(clients, "Connections", true)
+
+	status := libui.NewStack(config.Ui)
 	status.Push(libui.NewText(
 		fmt.Sprintf("WAYLAND_DISPLAY=%s -> %s",
-			proxy.ProxyDisplay(), proxy.RemoteDisplay())).
-		Reverse(true))
+			proxy.ProxyDisplay(), proxy.RemoteDisplay()),
+		config.Ui.GetStyle(config.STYLE_SUCCESS)))
 
 	grid := libui.NewGrid().Rows([]libui.GridSpec{
-		{libui.SIZE_EXACT, 1},
-		{libui.SIZE_WEIGHT, 1},
-		{libui.SIZE_EXACT, 1},
+		{Strategy: libui.SIZE_EXACT, Size: libui.Const(1)},
+		{Strategy: libui.SIZE_WEIGHT, Size: libui.Const(1)},
+		{Strategy: libui.SIZE_EXACT, Size: libui.Const(1)},
 	}).Columns([]libui.GridSpec{
-		{libui.SIZE_EXACT, 11},
-		{libui.SIZE_WEIGHT, 1},
+		{Strategy: libui.SIZE_EXACT, Size: libui.Const(11)},
+		{Strategy: libui.SIZE_WEIGHT, Size: libui.Const(1)},
 	})
-	grid.AddChild(libui.NewText("   wlhax   ").Reverse(true))
+	grid.AddChild(libui.NewText("   wlhax   ", config.Ui.GetStyle(config.STYLE_HEADER)))
 	grid.AddChild(tabs.TabStrip).At(0, 1)
 	grid.AddChild(tabs.TabContent).At(1, 0).Span(1, 2)
 	grid.AddChild(status).At(2, 0).Span(1, 2)
@@ -69,8 +74,7 @@ func NewDashboard(proxy *Proxy) *Dashboard {
 		}
 		v = NewClientView(c)
 		dash.tabMap[c] = v
-		tabs.Add(v, fmt.Sprintf("Client %d", c.Pid()))
-		tabs.Select(len(tabs.Tabs) - 1)
+		tabs.Add(v, fmt.Sprintf("Client %d", c.Pid()), false)
 	})
 	proxy.OnDisconnect(func(c *Client) {
 		clients.Invalidate()
@@ -87,44 +91,41 @@ func (dash *Dashboard) Draw(ctx *libui.Context) {
 }
 
 func (dash *Dashboard) OnInvalidate(callback func(d libui.Drawable)) {
-	dash.grid.OnInvalidate(func(d libui.Drawable) {
-		callback(dash)
-	})
+	//dash.grid.OnInvalidate(func(d libui.Drawable) {
+	//	callback(dash)
+	//})
+	libui.Invalidate()
 }
 
 func (dash *Dashboard) Invalidate() {
 	dash.grid.Invalidate()
 }
 
-func (dash *Dashboard) Event(event tcell.Event) bool {
+func (dash *Dashboard) Event(event vaxis.Event) bool {
 	if dash.focused != nil {
 		if dash.focused.Event(event) {
 			return true
 		}
 	}
-	interactive, ok := dash.tabs.Tabs[dash.tabs.Selected].
-		Content.(libui.Interactive)
+
+	interactive, ok := dash.tabs.Selected().Content.(libui.Interactive)
 	if ok {
 		if interactive.Event(event) {
 			return true
 		}
 	}
-	switch event := event.(type) {
-	case *tcell.EventKey:
-		switch event.Key() {
-		case tcell.KeyLeft:
+	if key, ok := event.(vaxis.Key); ok {
+		switch {
+		case key.Matches(vaxis.KeyLeft):
 			dash.tabs.PrevTab()
-		case tcell.KeyRight:
+		case key.Matches(vaxis.KeyRight):
 			dash.tabs.NextTab()
-		case tcell.KeyRune:
-			switch event.Rune() {
-			case 'h':
-				dash.tabs.PrevTab()
-			case 'l':
-				dash.tabs.NextTab()
-			case ':':
-				dash.BeginExCommand("")
-			}
+		case key.Matches('h'):
+			dash.tabs.PrevTab()
+		case key.Matches('l'):
+			dash.tabs.NextTab()
+		case key.Matches(':'):
+			dash.BeginExCommand("")
 		}
 	}
 	return false
@@ -150,8 +151,9 @@ func (dash *Dashboard) focus(item libui.Interactive) {
 		dash.focused.Focus(false)
 	}
 	dash.focused = item
-	interactive, ok := dash.tabs.Tabs[dash.tabs.Selected].
-		Content.(libui.Interactive)
+
+	interactive, ok := dash.tabs.Selected().Content.(libui.Interactive)
+		//tabs[dash.tabs.curIndex]
 	if item != nil {
 		item.Focus(true)
 		if ok {
