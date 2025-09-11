@@ -1,8 +1,7 @@
 package main
 
 import (
-	config "git.sr.ht/~rjarry/aerc/config"
-	"git.sr.ht/~rjarry/aerc/lib/ui"
+	"github.com/dwapp/wlhax/ui"
 	"git.sr.ht/~rockorager/vaxis"
 )
 
@@ -15,7 +14,7 @@ type ExLine struct {
 func NewExLine(cmd string, commit func(cmd string),
 	finish func()) *ExLine {
 
-	input := ui.NewTextInput("", config.Ui).Prompt(":").Set(cmd)
+	input := ui.NewTextInput("", vaxis.Style{}).Prompt(":").Set(cmd)
 	exline := &ExLine{
 		commit: commit,
 		finish: finish,
@@ -27,7 +26,7 @@ func NewExLine(cmd string, commit func(cmd string),
 
 func NewPrompt(prompt string, commit func(text string)) *ExLine {
 
-	input := ui.NewTextInput("", config.Ui).Prompt(prompt)
+	input := ui.NewTextInput("", vaxis.Style{}).Prompt(prompt)
 	exline := &ExLine{
 		commit: commit,
 		input:  input,

@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 
-	libui "git.sr.ht/~rjarry/aerc/lib/ui"
+	"github.com/dwapp/wlhax/ui"
 )
 
 func main() {
@@ -39,30 +39,30 @@ func main() {
 		cmd.Start()
 	}
 
-	err = libui.Initialize(dash)
+	err = ui.Initialize(dash)
 	if err != nil {
 		panic(err)
 	}
-	defer libui.Close()
+	defer ui.Close()
 
-	dash.OnExit(libui.Exit)
+	dash.OnExit(ui.Exit)
 
 	// Main event loop
 loop:
 	for {
 		select {
-		case event := <-libui.Events:
-			libui.HandleEvent(event)
-		case callback := <-libui.Callbacks:
+		case event := <-ui.Events:
+			ui.HandleEvent(event)
+		case callback := <-ui.Callbacks:
 			callback()
-		case <-libui.Redraw:
-			libui.Render()
-		case <-libui.SuspendQueue:
-			if err := libui.Suspend(); err != nil {
+		case <-ui.Redraw:
+			ui.Render()
+		case <-ui.SuspendQueue:
+			if err := ui.Suspend(); err != nil {
 				fmt.Fprintf(os.Stderr, "Failed to suspend UI: %v\n", err)
 				break loop
 			}
-		case <-libui.Quit:
+		case <-ui.Quit:
 			break loop
 		}
 	}

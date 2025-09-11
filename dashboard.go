@@ -4,47 +4,42 @@ import (
 	"fmt"
 	"os/exec"
 
-	config "git.sr.ht/~rjarry/aerc/config"
-	libui "git.sr.ht/~rjarry/aerc/lib/ui"
+	"github.com/dwapp/wlhax/ui"
 	"git.sr.ht/~rockorager/vaxis"
 	"github.com/google/shlex"
 )
 
 type Dashboard struct {
-	focused libui.Interactive
-	grid    *libui.Grid
+	focused ui.Interactive
+	grid    *ui.Grid
 	onExit  func()
 	proxy   *Proxy
-	status  *libui.Stack
-	tabs    *libui.Tabs
+	status  *ui.Stack
+	tabs    *ui.Tabs
 	tabMap  map[*Client]*ClientView
 }
 
 func NewDashboard(proxy *Proxy) *Dashboard {
 	clients := NewClientsView(proxy)
 
-	config.Ui.LoadStyle()
-
-	tabs := libui.NewTabs(func(d libui.Drawable) *config.UIConfig {
-		return config.Ui
-	})
+	tabs := ui.NewTabs()
 	tabs.Add(clients, "Connections", true)
 
-	status := libui.NewStack(config.Ui)
-	status.Push(libui.NewText(
+	status := ui.NewStack()
+	status.Push(ui.NewText(
 		fmt.Sprintf("WAYLAND_DISPLAY=%s -> %s",
 			proxy.ProxyDisplay(), proxy.RemoteDisplay()),
-		config.Ui.GetStyle(config.STYLE_SUCCESS)))
+		vaxis.Style{Foreground: vaxis.RGBColor(0, 255, 0)}))
 
-	grid := libui.NewGrid().Rows([]libui.GridSpec{
-		{Strategy: libui.SIZE_EXACT, Size: libui.Const(1)},
-		{Strategy: libui.SIZE_WEIGHT, Size: libui.Const(1)},
-		{Strategy: libui.SIZE_EXACT, Size: libui.Const(1)},
-	}).Columns([]libui.GridSpec{
-		{Strategy: libui.SIZE_EXACT, Size: libui.Const(11)},
-		{Strategy: libui.SIZE_WEIGHT, Size: libui.Const(1)},
+	grid := ui.NewGrid().Rows([]ui.GridSpec{
+		{Strategy: ui.SIZE_EXACT, Size: ui.Const(1)},
+		{Strategy: ui.SIZE_WEIGHT, Size: ui.Const(1)},
+		{Strategy: ui.SIZE_EXACT, Size: ui.Const(1)},
+	}).Columns([]ui.GridSpec{
+		{Strategy: ui.SIZE_EXACT, Size: ui.Const(11)},
+		{Strategy: ui.SIZE_WEIGHT, Size: ui.Const(1)},
 	})
-	grid.AddChild(libui.NewText("   wlhax   ", config.Ui.GetStyle(config.STYLE_HEADER)))
+	grid.AddChild(ui.NewText("   wlhax   ", vaxis.Style{Attribute: vaxis.AttrReverse}))
 	grid.AddChild(tabs.TabStrip).At(0, 1)
 	grid.AddChild(tabs.TabContent).At(1, 0).Span(1, 2)
 	grid.AddChild(status).At(2, 0).Span(1, 2)
@@ -86,14 +81,14 @@ func NewDashboard(proxy *Proxy) *Dashboard {
 	return dash
 }
 
-func (dash *Dashboard) Draw(ctx *libui.Context) {
+func (dash *Dashboard) Draw(ctx *ui.Context) {
 	dash.grid.Draw(ctx)
 }
 
-func (dash *Dashboard) OnInvalidate(callback func(d libui.Drawable)) {
+func (dash *Dashboard) OnInvalidate(callback func(d ui.Drawable)) {
 	// Note: OnInvalidate handling changed in new UI system
 	// Direct invalidation is now handled globally
-	libui.Invalidate()
+	ui.Invalidate()
 }
 
 func (dash *Dashboard) Invalidate() {
@@ -107,7 +102,7 @@ func (dash *Dashboard) Event(event vaxis.Event) bool {
 		}
 	}
 
-	interactive, ok := dash.tabs.Selected().Content.(libui.Interactive)
+	interactive, ok := dash.tabs.Selected().Content.(ui.Interactive)
 	if ok {
 		if interactive.Event(event) {
 			return true
@@ -142,7 +137,7 @@ func (dash *Dashboard) OnExit(exit func()) {
 	dash.onExit = exit
 }
 
-func (dash *Dashboard) focus(item libui.Interactive) {
+func (dash *Dashboard) focus(item ui.Interactive) {
 	if dash.focused == item {
 		return
 	}
@@ -151,7 +146,7 @@ func (dash *Dashboard) focus(item libui.Interactive) {
 	}
 	dash.focused = item
 
-	interactive, ok := dash.tabs.Selected().Content.(libui.Interactive)
+	interactive, ok := dash.tabs.Selected().Content.(ui.Interactive)
 	if item != nil {
 		item.Focus(true)
 		if ok {

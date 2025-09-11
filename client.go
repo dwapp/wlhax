@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	libui "git.sr.ht/~rjarry/aerc/lib/ui"
+	"github.com/dwapp/wlhax/ui"
 	"git.sr.ht/~rockorager/vaxis"
 )
 
@@ -39,7 +39,7 @@ type DashboardDisplayable interface {
 	DashboardPrint(func(string, ...interface{})) error
 }
 
-func (c *ClientView) Draw(ctx *libui.Context) {
+func (c *ClientView) Draw(ctx *ui.Context) {
 	c.viewportHeight = ctx.Height()
 	ctx.Fill(0, 0, ctx.Width(), ctx.Height(), ' ', vaxis.Style{})
 
@@ -117,7 +117,7 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 }
 
 func (client *ClientView) Invalidate() {
-	libui.Invalidate()
+	ui.Invalidate()
 }
 
 func (client *ClientView) SelectNext(inc int) {
