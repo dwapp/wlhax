@@ -6,7 +6,6 @@ toolchain go1.23.3
 
 require (
 	git.sr.ht/~rockorager/vaxis v0.10.3
-	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/kyoh86/xdg v1.2.0
 	github.com/mattn/go-runewidth v0.0.16
 	github.com/pkg/errors v0.9.1

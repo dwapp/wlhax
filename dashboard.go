@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/dwapp/wlhax/ui"
 	"git.sr.ht/~rockorager/vaxis"
-	"github.com/google/shlex"
 )
 
 type Dashboard struct {
@@ -165,8 +165,8 @@ func (dash *Dashboard) BeginExCommand(cmd string) {
 		if len(cmd) == 0 {
 			return
 		}
-		parts, err := shlex.Split(cmd)
-		if err != nil {
+		parts := strings.Fields(cmd)
+		if len(parts) == 0 {
 			return
 		}
 
