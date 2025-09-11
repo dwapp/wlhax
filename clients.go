@@ -1,7 +1,7 @@
 package main
 
 import (
-	libui "git.sr.ht/~rjarry/aerc/lib/ui"
+	"github.com/dwapp/wlhax/ui"
 	"git.sr.ht/~rockorager/vaxis"
 )
 
@@ -30,7 +30,7 @@ func NewClientsView(proxy *Proxy) *ClientsView {
 	}
 }
 
-func (clients *ClientsView) Draw(ctx *libui.Context) {
+func (clients *ClientsView) Draw(ctx *ui.Context) {
 	ctx.Fill(0, 0, ctx.Width(), ctx.Height(), ' ', vaxis.Style{})
 
 	proxy := clients.proxy
@@ -73,7 +73,7 @@ func (clients *ClientsView) Draw(ctx *libui.Context) {
 }
 
 func (clients *ClientsView) Invalidate() {
-	libui.Invalidate()
+	ui.Invalidate()
 }
 
 // TODO: Scrolling
