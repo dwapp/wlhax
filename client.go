@@ -69,7 +69,7 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 		status = client.Err.Error()
 	}
 
-	statusStyle := vaxis.Style {
+	statusStyle := vaxis.Style{
 		Foreground: vaxis.RGBColor(0, 255, 0),
 	}
 	if client.Err != nil {
@@ -103,7 +103,7 @@ func (c *ClientView) Draw(ctx *libui.Context) {
 		if y == c.selected {
 			c.currentCategory = category
 		}
-		printerWithStyle(vaxis.Style { Foreground: vaxis.IndexColor(226) }, category)
+		printerWithStyle(vaxis.Style{Foreground: vaxis.IndexColor(226)}, category)
 
 		if c.folded[category] {
 			continue

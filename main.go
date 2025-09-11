@@ -47,6 +47,7 @@ func main() {
 
 	dash.OnExit(libui.Exit)
 
+	// Main event loop
 loop:
 	for {
 		select {
@@ -57,9 +58,9 @@ loop:
 		case <-libui.Redraw:
 			libui.Render()
 		case <-libui.SuspendQueue:
-			err = libui.Suspend()
-			if err != nil {
-				panic(err)
+			if err := libui.Suspend(); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to suspend UI: %v\n", err)
+				break loop
 			}
 		case <-libui.Quit:
 			break loop

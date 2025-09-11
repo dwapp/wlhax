@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os/exec"
 
-	libui "git.sr.ht/~rjarry/aerc/lib/ui"
 	config "git.sr.ht/~rjarry/aerc/config"
-	"github.com/google/shlex"
+	libui "git.sr.ht/~rjarry/aerc/lib/ui"
 	"git.sr.ht/~rockorager/vaxis"
+	"github.com/google/shlex"
 )
 
 type Dashboard struct {
@@ -91,9 +91,8 @@ func (dash *Dashboard) Draw(ctx *libui.Context) {
 }
 
 func (dash *Dashboard) OnInvalidate(callback func(d libui.Drawable)) {
-	//dash.grid.OnInvalidate(func(d libui.Drawable) {
-	//	callback(dash)
-	//})
+	// Note: OnInvalidate handling changed in new UI system
+	// Direct invalidation is now handled globally
 	libui.Invalidate()
 }
 
@@ -153,7 +152,6 @@ func (dash *Dashboard) focus(item libui.Interactive) {
 	dash.focused = item
 
 	interactive, ok := dash.tabs.Selected().Content.(libui.Interactive)
-		//tabs[dash.tabs.curIndex]
 	if item != nil {
 		item.Focus(true)
 		if ok {

@@ -21,10 +21,7 @@ func NewExLine(cmd string, commit func(cmd string),
 		finish: finish,
 		input:  input,
 	}
-	/*
-	input.OnInvalidate(func(d ui.Drawable) {
-		ui.Invalidate()
-	})*/
+	// Note: OnInvalidate callback removed as it's handled by the new UI system
 	return exline
 }
 
@@ -35,16 +32,12 @@ func NewPrompt(prompt string, commit func(text string)) *ExLine {
 		commit: commit,
 		input:  input,
 	}
-	/*
-	input.OnInvalidate(func(d ui.Drawable) {
-		exline.Invalidate()
-	})
-	*/
+	// Note: OnInvalidate callback removed as it's handled by the new UI system
 	return exline
 }
 
 func (ex *ExLine) Invalidate() {
-	//ex.DoInvalidate(ex)
+	// Note: Invalidation is now handled by the global UI system
 }
 
 func (ex *ExLine) Draw(ctx *ui.Context) {

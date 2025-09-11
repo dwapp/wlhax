@@ -31,7 +31,6 @@ func NewClientsView(proxy *Proxy) *ClientsView {
 }
 
 func (clients *ClientsView) Draw(ctx *libui.Context) {
-
 	ctx.Fill(0, 0, ctx.Width(), ctx.Height(), ' ', vaxis.Style{})
 
 	proxy := clients.proxy
