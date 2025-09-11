@@ -71,14 +71,14 @@ func (ti *TextInput) deleteForward() {
 func (ti *TextInput) Draw(ctx *Context) {
 	ti.ctx = ctx
 	ctx.Fill(0, 0, ctx.Width(), ctx.Height(), ' ', ti.style)
-	
+
 	text := ti.prompt + string(ti.text)
 	if ti.password {
 		text = ti.prompt + strings.Repeat("*", len(ti.text))
 	}
-	
+
 	ctx.Printf(0, 0, ti.style, "%s", text)
-	
+
 	if ti.focus {
 		cursorPos := len([]rune(ti.prompt)) + ti.index
 		if cursorPos < ctx.Width() {
@@ -99,7 +99,7 @@ func (ti *TextInput) Event(event vaxis.Event) bool {
 	if !ti.focus {
 		return false
 	}
-	
+
 	if key, ok := event.(vaxis.Key); ok {
 		switch {
 		case key.Matches(vaxis.KeyBackspace):
@@ -126,15 +126,15 @@ func (ti *TextInput) Event(event vaxis.Event) bool {
 				}
 			}
 		}
-		
+
 		for _, change := range ti.change {
 			change(ti)
 		}
-		
+
 		ti.Invalidate()
 		return true
 	}
-	
+
 	return false
 }
 

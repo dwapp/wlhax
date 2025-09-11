@@ -20,7 +20,7 @@ func (stack *Stack) Pop() Drawable {
 	if len(stack.children) == 0 {
 		return nil
 	}
-	
+
 	d := stack.children[len(stack.children)-1]
 	stack.children = stack.children[:len(stack.children)-1]
 	return d
@@ -30,7 +30,7 @@ func (stack *Stack) Peek() Drawable {
 	if len(stack.children) == 0 {
 		return nil
 	}
-	
+
 	return stack.children[len(stack.children)-1]
 }
 

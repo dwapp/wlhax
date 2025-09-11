@@ -5,8 +5,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/dwapp/wlhax/ui"
 	"git.sr.ht/~rockorager/vaxis"
+	"github.com/dwapp/wlhax/ui"
 )
 
 type Dashboard struct {
