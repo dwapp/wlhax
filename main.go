@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"time"
 
-	libui "git.sr.ht/~sircmpwn/aerc/lib/ui"
+	libui "git.sr.ht/~rjarry/aerc/lib/ui"
 )
 
 func main() {
@@ -40,17 +39,31 @@ func main() {
 		cmd.Start()
 	}
 
-	ui, err := libui.Initialize(dash)
+	err = libui.Initialize(dash)
 	if err != nil {
 		panic(err)
 	}
-	defer ui.Close()
+	defer libui.Close()
 
-	dash.OnExit(ui.Exit)
+	dash.OnExit(libui.Exit)
 
-	for !ui.ShouldExit() {
-		if !ui.Tick() {
-			time.Sleep(16 * time.Millisecond)
+	// Main event loop
+loop:
+	for {
+		select {
+		case event := <-libui.Events:
+			libui.HandleEvent(event)
+		case callback := <-libui.Callbacks:
+			callback()
+		case <-libui.Redraw:
+			libui.Render()
+		case <-libui.SuspendQueue:
+			if err := libui.Suspend(); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to suspend UI: %v\n", err)
+				break loop
+			}
+		case <-libui.Quit:
+			break loop
 		}
 	}
 }
