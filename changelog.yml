@@ -1,0 +1,567 @@
+- semver: 0.0.1
+  date: 2025-01-14T20:23:50+08:00
+  packager: rewine <luhongxu@deepin.org>
+  changes:
+    - commit: a8aae9110609368e493fa0961e39f29ddda09a1a
+      note: Init goreleaser config
+      author:
+        name: rewine
+        email: luhongxu@deepin.org
+      committer:
+        name: rewine
+        email: luhongxu@deepin.org
+    - commit: 4fdab32111af343536d697502da275dea8b7d520
+      note: Update readme
+      author:
+        name: rewine
+        email: luhongxu@deepin.org
+      committer:
+        name: rewine
+        email: luhongxu@deepin.org
+    - commit: e0e00ed92ba6bad21679626786275584bcf67ea7
+      note: 'wp_cursor_shape_manager: Add support'
+      author:
+        name: rewine
+        email: luhongxu@deepin.org
+      committer:
+        name: rewine
+        email: luhongxu@deepin.org
+    - commit: 6ef07d9d2803dfc1b7665ea5512ff5c167f434a1
+      note: Update go mod
+      author:
+        name: rewine
+        email: luhongxu@deepin.org
+      committer:
+        name: rewine
+        email: luhongxu@deepin.org
+    - commit: 10b42941847f11a43dceaf8bf449301056c71f3b
+      note: |-
+        goimports the whole repo
+
+        I had initially failed to apply gofmt/goimports, which in turn lead me
+        to avoid calling these due to the large diffs.
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 6c9a3db27024c7effba9ff5a6fb50f54bf219ab7
+      note: 'wp_single_pixel_buffer: Add support'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 3f28e23bac067efccd3d201686ee663374adecca
+      note: 'zwp_idle_inhibit: Add support'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 570cd1a3d33a3f6850301247ded3c2488f63c461
+      note: |-
+        Avoid wlhax socket collisions
+
+        This allows running multiple wlhax instances, should one have a reason
+        to do so.
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: d85d853e42913f234610fe6bbaf9ce7d3a721131
+      note: 'wp_fractional_scale_v1: Add support'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: a667a873b66bc7da82edd74a385b99605e6fe1b7
+      note: 'wl_output: Track scale'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 751fee3fa9f797c7f64a165d54adcb4fea00b141
+      note: 'wl_surface: Track preferred scale/transform'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 3ba0aa045321f8ec81ce52d9763e650bc5d8cf3b
+      note: 'wl_output: show name'
+      author:
+        name: Simon Ser
+        email: contact@emersion.fr
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: b71e5beee6b98c4ff0514df445e2584b41097925
+      note: 'wl_seat: show name'
+      author:
+        name: Simon Ser
+        email: contact@emersion.fr
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 74115383fe18b05a6be50a934b4a075d8e3d919c
+      note: Avoid breaking display on error
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 9ac09f1f14e0200a4f601689223ec2c13fff7a2d
+      note: Handle empty mode command
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: a69ee352fd94201ecaa838235768a44e6770c3dd
+      note: Add closewrite command
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: e71fcf2b5f0b3fe0cacb14dc8a3f1a05a7cfa802
+      note: 'xdg_shell: Update with suspended state'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: e33e3fe207b0994bbf1b4c1a75fa0771e921b8e1
+      note: 'surface: clear buffer instead of role on null attach'
+      author:
+        name: Nicolas Avrutin
+        email: rasputin@google.com
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 6ba773a62975e10a39b4881960cf177dd2c82faf
+      note: 'surface: Clear role on null attach'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 2068f459624ea304ac729284cd1bc6b12f84a963
+      note: Change arg to be command to run
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: a8e83a4dc1c0c4ebf7bd2f3103abae2d148941f9
+      note: Scroll support
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 8e63744c35b2e357dfe8f5668594ba545afa025a
+      note: 'viewporter: Add support'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 91848603723bbce8387d2f9db1beb95ec9e37bb6
+      note: 'ui: Add space-to-fold'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: bc0c265110992071b400535ed95dbb150c9fd3e1
+      note: 'pointer: ''focus'' -> ''entered'''
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: d9a35fd81c5c71b9be90fc691ee2cabaea7fc53e
+      note: 'surface: More compact layout'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 0257927da303896110bda7e9d05e5adef3b959a1
+      note: Track buffers
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: d6c2efd00dc0166b442f42b4e3767d71c33ee72a
+      note: Add missing wl_output.go
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: dd2891081b27b9eee17f84a234ce1c39dcd31783
+      note: Fix key/button held count
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: da5c22dc9aaae2a1aedbad1978bef2a4ed21a0bd
+      note: Fix subsurface state related crash
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: c2cad7248d0f5d0acae511ad7eff50440818b155
+      note: Track wl_outputs
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: a56e85266d12c5539799e7a721b0d9c6f0ed656f
+      note: Show xdg_toplevel surface state
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 4ffb5d358633fcc49ee3d50efe3dd5473bd617ff
+      note: Print surface and parent
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: ec2a90aa57a2ecddfe25d39a3c3bbfbcb3e4c279
+      note: Move role debug to implementations
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: dbd4402ee1c6f46d3f947c658d42e0baf8c1d4a6
+      note: 'xdg_shell: Hack up xdg_positioner support'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 5a96f1b0f2a319936928002c2c77a700f8b9e2d9
+      note: Change to vim-style quit
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 29c596197009f3590344b0e6094f9c073dc2d944
+      note: Expand readme
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: f0c4afe4446894ce329b87844ef8624b7d946b4b
+      note: Update readme link
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 1f5a6e9ff7b9283fdaaa1dcbae2a87e291774a1e
+      note: Report xdg_shell geometry
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 941ed6050e0bbb7817c82d9b3abc387c38003a0e
+      note: 'xdg_shell: Update geometry correctly'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: a6f31e3e0600e5a7d00cc53a6510058f7b321627
+      note: Go to client tab on connection
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: c514c0b2dd077464cdc261fbe9e632baf36314c6
+      note: Use wlhax-0 when no display is specified
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 722b00be5b8eb300c22f9b7af0f7a81051ce6b85
+      note: Configurable proxy display path
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 1fc0d5aa39caa82603e4b62c0cffcd66df659a2a
+      note: Fix wl_seat info indent
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 592e97a67c894424e0e935b4b6be97a77862e0dd
+      note: Track pointer buttons held
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 97667760ad603f223355ff804b7274d991ca6b95
+      note: Track cursor motion
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: ea740449f45b03e4b12003f32a2ff7518cf68614
+      note: Move dashboard output to object impls
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: b7ea6e52e65e55d49cb7f15706af4c111ad19ce7
+      note: Expand seat
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: b19347e90a86eb18db2f66dcc5c320deba01a0a0
+      note: Better seat object info
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 72238f743c118176a707d4c954afd70a98554bbc
+      note: Client tabs
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: cec1eca63b8325cb460e6b69c1c7b298c584a2cb
+      note: Show connection PIDs
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: c848ee0767a9a294cfe60b183e0c8c05b9ecf38a
+      note: 'protocol: Increase oob buffer size, slice on use'
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 1caef08013db918f562c06f4c6d0385d15cbce12
+      note: Show configure info
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 2cf80b9df3ae7c3a7074e367a2f9afdf8250aa73
+      note: Add command list to info
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 87dd1e3ee1df20d12505d02248e992fb1911d09d
+      note: Add block command
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 35c24788de50314bec4325e047f5941163f9f2b3
+      note: Add README.md
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 466ddc73747182d021ac31872d00ff7d985358f6
+      note: Better role stringification
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 17d93bb54014fbdd430b262a4e88e9993d6d4ca8
+      note: Remove fprintf
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: b735f86d04c19c3d4819fbee5a44f325c530e7f6
+      note: Fix out-of-bounds print
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 9b5556798f9ae9ec2d0231b0e422584537b85685
+      note: Add clear command
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 6b9376286b98d8bb654d06356c71e5dd62364f3b
+      note: Hack hack hack
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: 689bc6b4bfff8494029a06782cae6020c88092c9
+      note: Initial protocols
+      author:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+      committer:
+        name: Kenny Levinsen
+        email: kl@kl.wtf
+    - commit: d60f91f70b136700b11c261f77e9de8ac92858e1
+      note: Fix formatting of fields in client summary
+      author:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+      committer:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+    - commit: 8fa9f877c33c24bbae86dd18e89aad83257e397d
+      note: Align fields in client summary list
+      author:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+      committer:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+    - commit: c08703edac09b94766b4123b9332aab104d29d53
+      note: Capture globals from wl_registry
+      author:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+      committer:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+    - commit: 35acbb946bd96de4af353d4f41dcb8d86ddac8c5
+      note: Log all known objects for each client
+      author:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+      committer:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+    - commit: 4caf3a8e902c4b5d22b5df194e54b76ca1008a1c
+      note: |-
+        Flesh out Wayland message handling
+
+        The proxy should now work fine with all Wayland clients
+      author:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+      committer:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+    - commit: 370f57ff5055655a4161948cf52427e275bff0f8
+      note: Add LICENSE
+      author:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+      committer:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+    - commit: 02d605c31f9c9000ca15e168247d64429dbac7bf
+      note: Flesh out the UI and implement simple proxy
+      author:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+      committer:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+    - commit: 431b71bebd5c8feee6280062c79dd8118b4187f6
+      note: Initial commit
+      author:
+        name: Drew DeVault
+        email: sir@cmpwn.com
+      committer:
+        name: Drew DeVault
+        email: sir@cmpwn.com
