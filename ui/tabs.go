@@ -102,7 +102,7 @@ func (tabs *Tabs) selectPriv(index int) {
 	if index < 0 || index >= len(tabs.tabs) {
 		return
 	}
-	
+
 	if tabs.curIndex != index {
 		tabs.pushHistory(tabs.curIndex)
 		tabs.curIndex = index
@@ -130,7 +130,7 @@ func (tabs *Tabs) pushHistory(index int) {
 	if index < 0 || index >= len(tabs.tabs) {
 		return
 	}
-	
+
 	for i, item := range tabs.history {
 		if item == index {
 			tabs.history = append(tabs.history[:i], tabs.history[i+1:]...)
@@ -157,18 +157,18 @@ func (strip *TabStrip) Draw(ctx *Context) {
 	for i, tab := range tabs.tabs {
 		name := tab.displayName()
 		width := runewidth.StringWidth(name) + 2 // padding
-		
+
 		style := vaxis.Style{}
 		if i == tabs.curIndex {
 			style.Attribute = vaxis.AttrReverse
 		}
-		
+
 		if x+width <= ctx.Width() {
 			ctx.Printf(x, 0, style, " %s ", name)
 			x += width
 		}
 	}
-	
+
 	// Fill remaining space
 	if x < ctx.Width() {
 		ctx.Fill(x, 0, ctx.Width()-x, 1, ' ', vaxis.Style{})

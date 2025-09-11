@@ -82,7 +82,7 @@ func (grid *Grid) Draw(ctx *Context) {
 		if cell.Row >= len(grid.rowLayout) || cell.Column >= len(grid.columnLayout) {
 			continue
 		}
-		
+
 		rows := grid.rowLayout[cell.Row : cell.Row+cell.RowSpan]
 		cols := grid.columnLayout[cell.Column : cell.Column+cell.ColSpan]
 		x := cols[0].Offset
@@ -122,7 +122,7 @@ func (grid *Grid) reflow(ctx *Context) {
 
 func (grid *Grid) computeLayout(specs []GridSpec, space int) []gridLayout {
 	layout := make([]gridLayout, len(specs))
-	
+
 	// First pass: exact sizes
 	remaining := space
 	for i, spec := range specs {
@@ -131,7 +131,7 @@ func (grid *Grid) computeLayout(specs []GridSpec, space int) []gridLayout {
 			remaining -= layout[i].Size
 		}
 	}
-	
+
 	// Second pass: weights
 	totalWeight := 0
 	for _, spec := range specs {
@@ -139,7 +139,7 @@ func (grid *Grid) computeLayout(specs []GridSpec, space int) []gridLayout {
 			totalWeight += spec.Size()
 		}
 	}
-	
+
 	if totalWeight > 0 && remaining > 0 {
 		for i, spec := range specs {
 			if spec.Strategy == SIZE_WEIGHT {
@@ -147,14 +147,14 @@ func (grid *Grid) computeLayout(specs []GridSpec, space int) []gridLayout {
 			}
 		}
 	}
-	
+
 	// Set offsets
 	offset := 0
 	for i := range layout {
 		layout[i].Offset = offset
 		offset += layout[i].Size
 	}
-	
+
 	return layout
 }
 

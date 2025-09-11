@@ -1,3 +1,13 @@
+- semver: 0.2.0
+  date: 2025-09-11T19:45:00+08:00
+  packager: rewine <luhongxu@deepin.org>
+  changes:
+    - note: "Pure Vaxis UI Implementation - Removed aerc dependency, built entirely with modern vaxis terminal UI library"
+    - note: "Simplified codebase - Cleaner, more maintainable UI code with custom Grid, Tabs, Text, and TextInput components"
+    - note: "Better performance - Direct vaxis usage for improved rendering performance"
+    - note: "Removed shlex dependency - Replaced with standard library strings.Fields"
+    - note: "Updated all Go dependencies to latest versions including vaxis v0.15.0"
+    - note: "Fixed deprecated goreleaser configuration keys"
 - semver: 0.0.1
   date: 2025-01-14T20:23:50+08:00
   packager: rewine <luhongxu@deepin.org>

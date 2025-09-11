@@ -65,14 +65,14 @@ func (tv *TabView) PrevTab() {
 func (tv *TabView) Draw(win vaxis.Window) {
 	tv.win = win
 	width, height := win.Size()
-	
+
 	if height < 2 {
 		return
 	}
-	
+
 	// Draw tab bar
 	tv.drawTabBar(win.New(0, 0, width, 1))
-	
+
 	// Draw content
 	if tab := tv.Selected(); tab != nil {
 		contentWin := win.New(0, 1, width, height-1)
@@ -84,19 +84,19 @@ func (tv *TabView) Draw(win vaxis.Window) {
 func (tv *TabView) drawTabBar(win vaxis.Window) {
 	win.Clear()
 	width, _ := win.Size()
-	
+
 	col := 0
 	for i, tab := range tv.tabs {
 		style := vaxis.Style{}
 		if i == tv.selected {
 			style.Attribute = vaxis.AttrReverse
 		}
-		
+
 		tabName := " " + tab.Name + " "
 		if col+len(tabName) > width {
 			break
 		}
-		
+
 		// Print each character with style
 		for _, char := range []rune(tabName) {
 			win.SetCell(col, 0, vaxis.Cell{
@@ -120,12 +120,12 @@ func (tv *TabView) HandleEvent(ev vaxis.Event) bool {
 			return true
 		}
 	}
-	
+
 	// Pass event to current tab
 	if tab := tv.Selected(); tab != nil {
 		return tab.Content.HandleEvent(ev)
 	}
-	
+
 	return false
 }
 
@@ -160,10 +160,10 @@ func (ti *TextInput) Text() string {
 func (ti *TextInput) Draw(win vaxis.Window) {
 	win.Clear()
 	display := ti.prompt + ti.text
-	
+
 	// Print text using Segment
 	win.Print(vaxis.Segment{Text: display})
-	
+
 	// Show cursor position
 	cursorPos := len(ti.prompt) + ti.cursor
 	width, _ := win.Size()

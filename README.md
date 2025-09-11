@@ -16,16 +16,6 @@ Useful for debugging Wayland applications and protocols.
 - **Protocol object tracking**: Monitor globals, surfaces, seats, keyboards, pointers, and more
 - **Modern UI**: Built with pure [vaxis](https://git.sr.ht/~rockorager/vaxis) for fast terminal rendering
 
-## Recent Updates
-
-### v2.0 - Pure Vaxis UI Implementation
-
-- **Removed aerc dependency**: No longer depends on the aerc email client's UI components
-- **Pure vaxis implementation**: Built entirely with modern vaxis terminal UI library
-- **Simplified codebase**: Cleaner, more maintainable UI code
-- **Better performance**: Direct vaxis usage for improved rendering performance
-- **Custom UI components**: Implemented our own Grid, Tabs, Text, and TextInput components
-
 ## How to build
 
 ```bash
