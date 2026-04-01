@@ -39,7 +39,10 @@ func NewDashboard(proxy *Proxy) *Dashboard {
 		{Strategy: ui.SIZE_EXACT, Size: ui.Const(11)},
 		{Strategy: ui.SIZE_WEIGHT, Size: ui.Const(1)},
 	})
-	grid.AddChild(ui.NewText("   wlhax   ", vaxis.Style{Attribute: vaxis.AttrReverse}))
+	grid.AddChild(ui.NewText("   wlhax   ", vaxis.Style{
+		Foreground: vaxis.RGBColor(245, 248, 250),
+		Background: vaxis.RGBColor(0, 96, 128),
+	}))
 	grid.AddChild(tabs.TabStrip).At(0, 1)
 	grid.AddChild(tabs.TabContent).At(1, 0).Span(1, 2)
 	grid.AddChild(status).At(2, 0).Span(1, 2)
