@@ -2,6 +2,8 @@ package ui
 
 import (
 	"math"
+
+	"git.sr.ht/~rockorager/vaxis"
 )
 
 type Grid struct {
@@ -160,6 +162,37 @@ func (grid *Grid) computeLayout(specs []GridSpec, space int) []gridLayout {
 
 func (grid *Grid) Invalidate() {
 	Invalidate()
+}
+
+func (grid *Grid) MouseEvent(localX int, localY int, event vaxis.Event) {
+	for _, cell := range grid.cells {
+		if cell.Row >= len(grid.rowLayout) || cell.Column >= len(grid.columnLayout) {
+			continue
+		}
+
+		rows := grid.rowLayout[cell.Row : cell.Row+cell.RowSpan]
+		cols := grid.columnLayout[cell.Column : cell.Column+cell.ColSpan]
+		x := cols[0].Offset
+		y := rows[0].Offset
+
+		width := 0
+		height := 0
+		for _, col := range cols {
+			width += col.Size
+		}
+		for _, row := range rows {
+			height += row.Size
+		}
+
+		if localX < x || localY < y || localX >= x+width || localY >= y+height {
+			continue
+		}
+
+		if handler, ok := cell.Content.(MouseHandler); ok {
+			handler.MouseEvent(localX-x, localY-y, event)
+		}
+		return
+	}
 }
 
 // Helper function to create constant size functions

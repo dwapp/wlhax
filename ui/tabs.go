@@ -15,6 +15,13 @@ type Tabs struct {
 	history    []int
 	m          sync.Mutex
 	CloseTab   func(index int)
+	hitboxes   []tabHitbox
+}
+
+type tabHitbox struct {
+	index int
+	x     int
+	width int
 }
 
 type Tab struct {
@@ -154,6 +161,7 @@ func (tabs *Tabs) removeHistory(index int) {
 func (strip *TabStrip) Draw(ctx *Context) {
 	tabs := (*Tabs)(strip)
 	x := 0
+	tabs.hitboxes = tabs.hitboxes[:0]
 	for i, tab := range tabs.tabs {
 		name := tab.displayName()
 		width := runewidth.StringWidth(name) + 2 // padding
@@ -165,6 +173,11 @@ func (strip *TabStrip) Draw(ctx *Context) {
 
 		if x+width <= ctx.Width() {
 			ctx.Printf(x, 0, style, " %s ", name)
+			tabs.hitboxes = append(tabs.hitboxes, tabHitbox{
+				index: i,
+				x:     x,
+				width: width,
+			})
 			x += width
 		}
 	}
@@ -181,6 +194,22 @@ func (strip *TabStrip) Invalidate() {
 
 func (strip *TabStrip) Event(event vaxis.Event) bool {
 	return false
+}
+
+func (strip *TabStrip) MouseEvent(localX int, localY int, event vaxis.Event) {
+	mouse, ok := event.(vaxis.Mouse)
+	if !ok || localY != 0 || mouse.EventType != vaxis.EventPress || mouse.Button != vaxis.MouseLeftButton {
+		return
+	}
+
+	tabs := (*Tabs)(strip)
+	for _, hitbox := range tabs.hitboxes {
+		if localX >= hitbox.x && localX < hitbox.x+hitbox.width {
+			tabs.Select(hitbox.index)
+			Invalidate()
+			return
+		}
+	}
 }
 
 func (strip *TabStrip) Focus(focus bool) {
@@ -214,6 +243,15 @@ func (content *TabContent) Focus(focus bool) {
 	if tab := tabs.Selected(); tab != nil {
 		if interactive, ok := tab.Content.(Interactive); ok {
 			interactive.Focus(focus)
+		}
+	}
+}
+
+func (content *TabContent) MouseEvent(localX int, localY int, event vaxis.Event) {
+	tabs := (*Tabs)(content)
+	if tab := tabs.Selected(); tab != nil {
+		if handler, ok := tab.Content.(MouseHandler); ok {
+			handler.MouseEvent(localX, localY, event)
 		}
 	}
 }

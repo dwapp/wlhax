@@ -12,6 +12,10 @@ type Context struct {
 	x, y   int
 }
 
+func (ctx *Context) Offset() (int, int) {
+	return ctx.x, ctx.y
+}
+
 func (ctx *Context) Width() int {
 	width, _ := ctx.window.Size()
 	return width

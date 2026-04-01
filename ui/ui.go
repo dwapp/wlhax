@@ -149,6 +149,11 @@ func HandleEvent(event vaxis.Event) {
 			key.Modifiers &^= vaxis.ModNumLock
 			event = key
 		}
+		if mouse, ok := event.(vaxis.Mouse); ok {
+			if handler, ok := state.content.(MouseHandler); ok {
+				handler.MouseEvent(mouse.Col, mouse.Row, mouse)
+			}
+		}
 		state.content.Event(event)
 	}
 }

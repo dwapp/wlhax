@@ -129,6 +129,10 @@ func (dash *Dashboard) Focus(focus bool) {
 	// This space deliberately left blank
 }
 
+func (dash *Dashboard) MouseEvent(localX int, localY int, event vaxis.Event) {
+	dash.grid.MouseEvent(localX, localY, event)
+}
+
 func (dash *Dashboard) OnBeep(func() error) {
 	// This space deliberately left blank
 }

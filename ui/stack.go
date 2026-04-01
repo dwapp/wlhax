@@ -1,5 +1,7 @@
 package ui
 
+import "git.sr.ht/~rockorager/vaxis"
+
 type Stack struct {
 	children []Drawable
 }
@@ -42,4 +44,12 @@ func (stack *Stack) Draw(ctx *Context) {
 
 func (stack *Stack) Invalidate() {
 	Invalidate()
+}
+
+func (stack *Stack) MouseEvent(localX int, localY int, event vaxis.Event) {
+	if child := stack.Peek(); child != nil {
+		if handler, ok := child.(MouseHandler); ok {
+			handler.MouseEvent(localX, localY, event)
+		}
+	}
 }

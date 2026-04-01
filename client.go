@@ -16,12 +16,14 @@ type ClientView struct {
 	currentLines    int
 	scroll          int
 	folded          map[string]bool
+	lineCategories  map[int]string
 }
 
 func NewClientView(client *Client) *ClientView {
 	return &ClientView{
-		client: client,
-		folded: make(map[string]bool),
+		client:         client,
+		folded:         make(map[string]bool),
+		lineCategories: make(map[int]string),
 	}
 }
 
@@ -99,10 +101,12 @@ func (c *ClientView) Draw(ctx *ui.Context) {
 	}
 	sort.Sort(sort.StringSlice(categories))
 	c.currentCategory = ""
+	c.lineCategories = make(map[int]string, len(categories))
 	for _, category := range categories {
 		if y == c.selected {
 			c.currentCategory = category
 		}
+		c.lineCategories[y] = category
 		printerWithStyle(vaxis.Style{Foreground: vaxis.IndexColor(226)}, category)
 
 		if c.folded[category] {
@@ -150,6 +154,33 @@ func (client *ClientView) Toggle() {
 	client.Invalidate()
 }
 
+func (client *ClientView) ScrollBy(delta int) {
+	client.scroll += delta
+	maxScroll := client.currentLines - client.viewportHeight
+	if maxScroll < 0 {
+		maxScroll = 0
+	}
+	if client.scroll < 0 {
+		client.scroll = 0
+	}
+	if client.scroll > maxScroll {
+		client.scroll = maxScroll
+	}
+	if client.selected < client.scroll {
+		client.selected = client.scroll
+	}
+	if client.viewportHeight > 0 && client.selected >= client.scroll+client.viewportHeight {
+		client.selected = client.scroll + client.viewportHeight - 1
+	}
+	if client.selected >= client.currentLines {
+		client.selected = client.currentLines - 1
+	}
+	if client.selected < 0 {
+		client.selected = 0
+	}
+	client.Invalidate()
+}
+
 func (client *ClientView) Focus(focus bool) {
 	// This space deliberately left blank
 }
@@ -181,4 +212,35 @@ func (client *ClientView) Event(event vaxis.Event) bool {
 		}
 	}
 	return false
+}
+
+func (client *ClientView) MouseEvent(localX int, localY int, event vaxis.Event) {
+	mouse, ok := event.(vaxis.Mouse)
+	if !ok || mouse.EventType != vaxis.EventPress {
+		return
+	}
+
+	switch mouse.Button {
+	case vaxis.MouseWheelUp:
+		client.ScrollBy(-3)
+		return
+	case vaxis.MouseWheelDown:
+		client.ScrollBy(3)
+		return
+	case vaxis.MouseLeftButton:
+	default:
+		return
+	}
+
+	line := client.scroll + localY
+	if line < 0 || line >= client.currentLines {
+		return
+	}
+
+	client.selected = line
+	if category, ok := client.lineCategories[line]; ok {
+		client.currentCategory = category
+		client.folded[category] = !client.folded[category]
+	}
+	client.Invalidate()
 }

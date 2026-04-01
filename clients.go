@@ -20,8 +20,10 @@ Commands: exec, slow, fast, clear, block, unblock, quit
 )
 
 type ClientsView struct {
-	selected int
-	proxy    *Proxy
+	selected       int
+	scroll         int
+	viewportHeight int
+	proxy          *Proxy
 }
 
 func NewClientsView(proxy *Proxy) *ClientsView {
@@ -31,6 +33,7 @@ func NewClientsView(proxy *Proxy) *ClientsView {
 }
 
 func (clients *ClientsView) Draw(ctx *ui.Context) {
+	clients.viewportHeight = ctx.Height()
 	ctx.Fill(0, 0, ctx.Width(), ctx.Height(), ' ', vaxis.Style{})
 
 	proxy := clients.proxy
@@ -39,9 +42,8 @@ func (clients *ClientsView) Draw(ctx *ui.Context) {
 		return
 	}
 
-	// TODO: Scrolling
 	y := 0
-	for i := 0; i < len(proxy.Clients) && y < ctx.Height(); i++ {
+	for i := clients.scroll; i < len(proxy.Clients) && y < ctx.Height(); i++ {
 		client := proxy.Clients[i]
 		status := "Connected"
 		if client.Err != nil {
@@ -76,12 +78,12 @@ func (clients *ClientsView) Invalidate() {
 	ui.Invalidate()
 }
 
-// TODO: Scrolling
 func (clients *ClientsView) SelectNext() {
 	clients.selected += 1
 	if clients.selected >= len(clients.proxy.Clients) {
 		clients.selected = len(clients.proxy.Clients) - 1
 	}
+	clients.ensureSelectionVisible()
 	clients.Invalidate()
 }
 
@@ -90,7 +92,52 @@ func (clients *ClientsView) SelectPrev() {
 	if clients.selected < 0 {
 		clients.selected = 0
 	}
+	clients.ensureSelectionVisible()
 	clients.Invalidate()
+}
+
+func (clients *ClientsView) ScrollBy(delta int) {
+	if len(clients.proxy.Clients) == 0 {
+		return
+	}
+
+	clients.scroll += delta
+	maxScroll := len(clients.proxy.Clients) - clients.visibleItems()
+	if maxScroll < 0 {
+		maxScroll = 0
+	}
+	if clients.scroll < 0 {
+		clients.scroll = 0
+	}
+	if clients.scroll > maxScroll {
+		clients.scroll = maxScroll
+	}
+	clients.ensureSelectionVisible()
+	clients.Invalidate()
+}
+
+func (clients *ClientsView) visibleItems() int {
+	if clients.viewportHeight <= 0 {
+		return 1
+	}
+	visible := clients.viewportHeight / 2
+	if visible < 1 {
+		visible = 1
+	}
+	return visible
+}
+
+func (clients *ClientsView) ensureSelectionVisible() {
+	visible := clients.visibleItems()
+	if clients.selected < clients.scroll {
+		clients.scroll = clients.selected
+	}
+	if clients.selected >= clients.scroll+visible {
+		clients.scroll = clients.selected - visible + 1
+	}
+	if clients.scroll < 0 {
+		clients.scroll = 0
+	}
 }
 
 func (clients *ClientsView) Focus(focus bool) {
@@ -115,4 +162,28 @@ func (clients *ClientsView) Event(event vaxis.Event) bool {
 		}
 	}
 	return false
+}
+
+func (clients *ClientsView) MouseEvent(localX int, localY int, event vaxis.Event) {
+	mouse, ok := event.(vaxis.Mouse)
+	if !ok || mouse.EventType != vaxis.EventPress {
+		return
+	}
+
+	switch mouse.Button {
+	case vaxis.MouseWheelUp:
+		clients.ScrollBy(-1)
+		return
+	case vaxis.MouseWheelDown:
+		clients.ScrollBy(1)
+		return
+	case vaxis.MouseLeftButton:
+		index := clients.scroll + localY/2
+		if index < 0 || index >= len(clients.proxy.Clients) {
+			return
+		}
+		clients.selected = index
+		clients.ensureSelectionVisible()
+		clients.Invalidate()
+	}
 }
