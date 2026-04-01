@@ -29,10 +29,10 @@ func main() {
 		panic(err)
 	}
 	defer os.Remove(path)
-	go proxy.Run()
 	defer proxy.Close()
 
 	dash := NewDashboard(proxy)
+	go proxy.Run()
 
 	if len(os.Args) > 1 {
 		cmd := exec.Command(os.Args[1], os.Args[2:]...)

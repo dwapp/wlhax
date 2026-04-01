@@ -12,6 +12,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+var noopClientCallback = func(*Client) {}
+
 // TODO: Support synthetic servers without forwarding events, so users can
 // manually send requests to clients
 type Proxy struct {
@@ -56,6 +58,8 @@ type Client struct {
 	GlobalMap map[uint32]*WaylandGlobal
 
 	lock sync.RWMutex
+
+	closeOnce sync.Once
 
 	Impls map[string]Implementation
 }
@@ -108,6 +112,9 @@ func NewProxy(proxyDisplay, remoteDisplay string) (*Proxy, error) {
 		proxyDisplay:  proxyDisplay,
 		remoteDisplay: remoteDisplay,
 		remotePath:    remotePath,
+		onUpdate:      noopClientCallback,
+		onConnect:     noopClientCallback,
+		onDisconnect:  noopClientCallback,
 	}, nil
 }
 
@@ -141,15 +148,36 @@ func (proxy *Proxy) Close() {
 }
 
 func (proxy *Proxy) OnUpdate(onUpdate func(*Client)) {
+	if onUpdate == nil {
+		onUpdate = noopClientCallback
+	}
 	proxy.onUpdate = onUpdate
 }
 
 func (proxy *Proxy) OnConnect(onConnect func(*Client)) {
+	if onConnect == nil {
+		onConnect = noopClientCallback
+	}
 	proxy.onConnect = onConnect
 }
 
 func (proxy *Proxy) OnDisconnect(onDisconnect func(*Client)) {
+	if onDisconnect == nil {
+		onDisconnect = noopClientCallback
+	}
 	proxy.onDisconnect = onDisconnect
+}
+
+func (proxy *Proxy) notifyUpdate(client *Client) {
+	proxy.onUpdate(client)
+}
+
+func (proxy *Proxy) notifyConnect(client *Client) {
+	proxy.onConnect(client)
+}
+
+func (proxy *Proxy) notifyDisconnect(client *Client) {
+	proxy.onDisconnect(client)
 }
 
 func (proxy *Proxy) handleClient(conn net.Conn) {
@@ -213,14 +241,15 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 
 	remote, err := net.Dial("unix", proxy.remotePath)
 	if err != nil {
-		proxy.onUpdate(nil)
+		client.proxy = proxy
+		proxy.notifyUpdate(client)
 		client.Close(err)
 		return
 	}
 
 	client.remote = remote.(*net.UnixConn)
 	client.proxy = proxy
-	proxy.onConnect(client)
+	proxy.notifyConnect(client)
 
 	// Remote loop
 	go func() {
@@ -233,7 +262,7 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 			client.lock.Lock()
 			client.RecordRx(packet)
 			client.lock.Unlock()
-			client.proxy.onUpdate(client)
+			client.proxy.notifyUpdate(client)
 			err = packet.WritePacket(client.conn)
 			if err != nil {
 				client.Close(err)
@@ -256,7 +285,7 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 			for proxy.Block {
 				time.Sleep(500 * time.Millisecond)
 			}
-			client.proxy.onUpdate(client)
+			client.proxy.notifyUpdate(client)
 			err = packet.WritePacket(client.remote)
 			if err != nil {
 				client.Close(err)
@@ -270,13 +299,21 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 }
 
 func (client *Client) Close(err error) {
-	if client.Err == nil {
-		client.Err = err
-	}
-	client.conn.Close()
-	client.remote.Close()
-	client.Timestamp = time.Now()
-	client.proxy.onDisconnect(client)
+	client.closeOnce.Do(func() {
+		if client.Err == nil {
+			client.Err = err
+		}
+		if client.conn != nil {
+			client.conn.Close()
+		}
+		if client.remote != nil {
+			client.remote.Close()
+		}
+		client.Timestamp = time.Now()
+		if client.proxy != nil {
+			client.proxy.notifyDisconnect(client)
+		}
+	})
 }
 
 func (client *Client) RemoveObject(objectId uint32) {
@@ -306,7 +343,7 @@ func (client *Client) NewObject(objectId uint32, iface string) *WaylandObject {
 }
 
 func (client *Client) RecordRx(packet *WaylandPacket) {
-	client.RxLog = append(client.TxLog, packet)
+	client.RxLog = append(client.RxLog, packet)
 
 	// Fallback for objects with unknown interfaces
 	if object, ok := client.ObjectMap[packet.ObjectId]; !ok {
