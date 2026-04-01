@@ -1,62 +1,37 @@
 # wlhax
 
-> Note: I forked this project for personal use, and may add non-standard protocol support in the future. The original project was https://git.sr.ht/~kennylevinsen/wlhax.
+Wayland proxy and terminal dashboard for inspecting clients, protocol objects, and surface state in real time.
 
-Fork of https://git.sr.ht/~sircmpwn/wlhax
+This fork is based on:
 
-Wayland proxy that monitors and displays various application state, such as the current surface tree, in a nice little TUI.
+- https://git.sr.ht/~sircmpwn/wlhax
+- https://git.sr.ht/~kennylevinsen/wlhax
 
-Useful for debugging Wayland applications and protocols.
+## What It Does
 
-## Features
+- Proxies a Wayland display socket
+- Forwards protocol traffic between clients and the real compositor
+- Tracks protocol objects, globals, buffers, and surfaces per client
+- Renders the current state in a TUI built with `vaxis`
 
-- **Real-time Wayland protocol monitoring**: Intercepts and displays all Wayland messages
-- **Interactive TUI**: Navigate through connected clients and their protocol state
-- **Surface tree visualization**: Shows the hierarchy of Wayland surfaces
-- **Protocol object tracking**: Monitor globals, surfaces, seats, keyboards, pointers, and more
-- **Modern UI**: Built with pure [vaxis](https://git.sr.ht/~rockorager/vaxis) for fast terminal rendering
-
-## How to build
+## Quick Start
 
 ```bash
 go build
+WAYLAND_DISPLAY=wayland-0 ./wlhax
 ```
 
-## How to use
+Then start a client against the proxy socket shown in the status bar, or launch one from inside `wlhax` with `:exec <command>`.
 
-1. Start wlhax (`./wlhax`). If you want to proxy an alternate wayland display, specify WAYLAND_DISPLAY when starting wlhax.
-2. Follow the instructions, using either `:exec` to start an application, or starting an application externally while specifying `WAYLAND_DISPLAY=wlhax-0` in the environment.
-3. Switch tabs to select the different available clients by using the left/right arrows.
+## Controls
 
-### Keyboard shortcuts
+- `Left` / `Right`, `h` / `l`: switch tabs
+- `Up` / `Down`, `j` / `k`: move selection
+- `Space`: fold or unfold the current category
+- `:`: command mode
+- `:exec <command>`: launch a client
+- `:slow`, `:fast`, `:block`, `:unblock`, `:clear`, `:quit`
 
-- **Arrow keys / h,j,k,l**: Navigate through UI elements
-- **Tab navigation**: Left/Right arrows or h/l to switch between client tabs
-- **Space**: Toggle folding of protocol categories
-- **:**: Enter command mode
-- **:exec `<command>`**: Execute a new Wayland client
-- **:quit**: Exit wlhax
+## Documentation
 
-### Protocol monitoring
-
-wlhax intercepts all Wayland protocol messages between clients and the compositor, allowing you to:
-
-- Monitor surface creation and destruction
-- Track input events (keyboard, mouse, touch)
-- Observe buffer management and damage tracking
-- Debug protocol extensions and custom protocols
-- Analyze performance issues in Wayland applications
-
-## Technical details
-
-### Architecture
-
-- **Proxy server**: Creates a Unix socket that clients connect to
-- **Message forwarding**: Transparently forwards messages to the real compositor
-- **Protocol parsing**: Decodes Wayland messages for display
-- **TUI interface**: Real-time visualization using vaxis terminal library
-
-### Dependencies
-
-- [vaxis](https://git.sr.ht/~rockorager/vaxis) - Modern terminal UI library
-- Standard Go libraries for Wayland protocol handling
+- Technical design: [docs/technical.md](docs/technical.md)
