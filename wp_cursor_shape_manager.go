@@ -6,10 +6,11 @@ import (
 )
 
 type WpCursorShapeDevice struct {
-	Object  *WaylandObject
-	Pointer *WlPointer
-	serial  *uint32
-	shape   *uint32 // wp_cursor_shape_device_v1.shape
+	Object     *WaylandObject
+	Pointer    *WlPointer
+	TabletTool *WaylandObject
+	serial     *uint32
+	shape      *uint32 // wp_cursor_shape_device_v1.shape
 }
 
 func (w *WpCursorShapeDevice) Destroy() error {
@@ -28,13 +29,13 @@ var shapeName = [...]string{"default", "context_menu", "help", "pointer", "progr
 	"crosshair", "text", "vertical_text", "alias", "copy", "move", "no_drop", "not_allowed",
 	"grab", "grabbing", "e_resize", "n_resize", "ne_resize", "nw_resize", "s_resize", "se_resize",
 	"sw_resize", "w_resize", "ew_resize", "ns_resize", "nesw_resize", "nwse_resize", "col_resize",
-	"row_resize", "all_scroll", "zoom_in", "zoom_out"}
+	"row_resize", "all_scroll", "zoom_in", "zoom_out", "dnd_ask", "all_resize"}
 
 func (w *WpCursorShapeDevice) DashboardPrint(printer func(string, ...interface{})) error {
 	if w.shape == nil {
 		printer("%s - %s, shape: not set", Indent(0), w.Object)
 	} else if int(*w.shape) > len(shapeName) {
-		printer("%s - %s, shape(unknown id): %d", Indent(0), *w.shape)
+		printer("%s - %s, shape(unknown id): %d", Indent(0), w.Object, *w.shape)
 	} else {
 		printer("%s - %s, shape: %s", Indent(0), w.Object, shapeName[*w.shape-1])
 	}
@@ -127,7 +128,24 @@ func (w *WpCursorShapeManagerImpl) Request(packet *WaylandPacket) error {
 		}
 
 	case 2: // get_tablet_tool_v2
-		// Not implemented
+		oid, err := packet.ReadUint32() // new_id<wp_cursor_shape_device_v1>
+		if err != nil {
+			return err
+		}
+		tid, err := packet.ReadUint32() // object<zwp_tablet_tool_v2>
+		if err != nil {
+			return err
+		}
+		tobj, ok := w.client.ObjectMap[tid]
+		if !ok {
+			return fmt.Errorf("no such tablet tool object: %d", tid)
+		}
+
+		obj := w.client.NewObject(oid, "wp_cursor_shape_device_v1")
+		obj.Data = &WpCursorShapeDevice{
+			Object:     obj,
+			TabletTool: tobj,
+		}
 	}
 	return nil
 }
