@@ -107,7 +107,11 @@ func (c *ClientView) Draw(ctx *ui.Context) {
 			c.currentCategory = category
 		}
 		c.lineCategories[y] = category
-		printerWithStyle(vaxis.Style{Foreground: vaxis.IndexColor(226)}, category)
+		foldIndicator := "▼ "
+		if c.folded[category] {
+			foldIndicator = "▶ "
+		}
+		printerWithStyle(vaxis.Style{Foreground: vaxis.IndexColor(226)}, foldIndicator+category)
 
 		if c.folded[category] {
 			continue
