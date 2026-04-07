@@ -39,9 +39,17 @@ Common `<arg>` types and their corresponding read calls:
 
 ---
 
-## 2. File Naming
+## 2. File Naming and Conventions
 
-Create one `.go` file per protocol (or per tightly related group of interfaces):
+Create one `.go` file per protocol (or per tightly related group of interfaces).
+
+**Important**: Start the file with a comment indicating the target version of the implemented protocol:
+```go
+// <interface_name> protocol version: <v>
+package main
+```
+
+File naming convention:
 
 | Interface name | File name |
 |---|---|

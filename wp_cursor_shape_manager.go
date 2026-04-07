@@ -1,3 +1,4 @@
+// wp_cursor_shape_manager_v1 protocol version: 2
 package main
 
 import (
