@@ -238,6 +238,8 @@ func (proxy *Proxy) handleClient(conn net.Conn) {
 	RegisterWpIdleInhibitor(client)
 	RegisterCursorShapeManager(client)
 	RegisterCursorShapeDevice(client)
+	RegisterZxdgDecorationManager(client)
+	RegisterZxdgToplevelDecoration(client)
 
 	remote, err := net.Dial("unix", proxy.remotePath)
 	if err != nil {
