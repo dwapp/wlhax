@@ -31,7 +31,3 @@ Then start a client against the proxy socket shown in the status bar, or launch 
 - `:`: command mode
 - `:exec <command>`: launch a client
 - `:slow`, `:fast`, `:block`, `:unblock`, `:clear`, `:quit`
-
-## Documentation
-
-- Technical design: [docs/technical.md](docs/technical.md)
